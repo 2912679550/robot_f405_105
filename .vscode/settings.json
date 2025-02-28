@@ -1,0 +1,26 @@
+{
+    "files.associations": {
+        "system_config.h": "c",
+        "stm32f4xx.h": "c",
+        "delay.h": "c",
+        "includes.h": "c",
+        "stdbool.h": "c",
+        "myglobe.h": "c",
+        "arm_math.h": "c",
+        "robotcom_proplist.h": "c",
+        "robotcan_idconf.h": "c",
+        "robotcan_proplist.h": "c",
+        "robotcan_basic.h": "c",
+        "r2_vulcan.h": "c",
+        "robotcom_basic.h": "c",
+        "motor_control.h": "c",
+        "iic.h": "c",
+        "stm32f4xx_spi.h": "c",
+        "vesc_can.h": "c",
+        "vesc_motor.h": "c",
+        "holdgrip.h": "c",
+        "turnarrow.h": "c",
+        "can.h": "c",
+        "zy_visualscope.h": "c"
+    }
+}

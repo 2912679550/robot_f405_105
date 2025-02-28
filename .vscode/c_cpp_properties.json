@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "D:/software/Keil_V5/ARM/PACK/ARM/CMSIS/5.7.0/CMSIS/Include",
+                "${workspaceFolder}/Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F"
+            ],
+            "defines": [
+                "USE_STDPERIPH_DRIVER",
+                "STM32F405xx",
+                "__FPU_PRESENT=1",
+                "__FPU_USED =1",
+                "ARM_MATH_CM4",
+                "__CC_ARM"
+            ],
+            "compilerPath": "D:/software/mingw64/bin/gcc.exe",
+            "cStandard": "c11",
+            "cppStandard": "gnu++14"
+        }
+    ],
+    "version": 4
+}
