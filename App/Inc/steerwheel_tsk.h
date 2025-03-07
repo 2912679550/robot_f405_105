@@ -22,12 +22,12 @@ namespace TskSteer
 {
     typedef enum
     {
-        STOP,
-        NORMAL,
-        TORQUE,
-        RESET,
-        RESETTING,
-        RESETOVER,
+        STOP,       // 0 停止
+        NORMAL,     // 1 正常
+        TORQUE,     // 2 扭矩
+        RESET,      // 3 复位
+        RESETTING,  // 4 复位中
+        RESETOVER,  // 5 复位结束
     } steerState;
 
     void Init();

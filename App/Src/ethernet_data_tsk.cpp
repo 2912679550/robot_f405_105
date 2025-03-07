@@ -13,38 +13,35 @@ uint8_t txDealBuf[SEND_BUF_SIZE];
 volatile TSRecord sysTs;
 SemaphoreHandle_t xMutex;
 
-
-
-
 uint16_t pack_struct_short(void *p, const char name[][13], const char *type, uint8_t len, uint16_t prefix)
 {
-    memset(txDealBuf + prefix, 0, SEND_BUF_SIZE - prefix); 
+    memset(txDealBuf + prefix, 0, SEND_BUF_SIZE - prefix);
     for (int i = 0; i < len; i++)
     {
         volatile char type_idx = type[i];
         if (type_idx == 1)
         {
-//            sprintf((char *)txDealBuf + prefix, "%s:", name[i]);
-//            prefix += strlen(name[i])+1;
-            memcpy(txDealBuf+prefix, (void *)p, 4);
-            txDealBuf[prefix+4] = ' ';
+            //            sprintf((char *)txDealBuf + prefix, "%s:", name[i]);
+            //            prefix += strlen(name[i])+1;
+            memcpy(txDealBuf + prefix, (void *)p, 4);
+            txDealBuf[prefix + 4] = ' ';
             prefix += 5;
         }
         else if (type_idx == 2)
         {
-//            sprintf((char *)txDealBuf + prefix, "%s:", name[i]);
-//            prefix += strlen(name[i])+1;
-            memcpy(txDealBuf+prefix, (void *)p, 4);
-            txDealBuf[prefix+4] = ' ';
+            //            sprintf((char *)txDealBuf + prefix, "%s:", name[i]);
+            //            prefix += strlen(name[i])+1;
+            memcpy(txDealBuf + prefix, (void *)p, 4);
+            txDealBuf[prefix + 4] = ' ';
             prefix += 5;
-        }        
+        }
         else if (type_idx == 3)
         {
             uint64_t ts = sysTs.ethTs + (xTaskGetTickCount() - sysTs.localTs) * 1000;
-//            sprintf((char *)txDealBuf + prefix, "%s:", name[i]);
-//            prefix += strlen(name[i])+1;
-            memcpy(txDealBuf+prefix, (void *)&ts, 8);
-            txDealBuf[prefix+8] = ' ';
+            //            sprintf((char *)txDealBuf + prefix, "%s:", name[i]);
+            //            prefix += strlen(name[i])+1;
+            memcpy(txDealBuf + prefix, (void *)&ts, 8);
+            txDealBuf[prefix + 8] = ' ';
             prefix += 9;
         }
         p = ((char *)p + (type[i] == 3 ? 8 : 4));
@@ -55,23 +52,31 @@ uint16_t pack_struct_short(void *p, const char name[][13], const char *type, uin
     return prefix;
 }
 
+/* 
+@brief: 将结构体的数据打包成一个字符串格式的字节数组
+@param: void *p: 指向要打包的结构体数据的指针
+@param: const char name[][13]: 结构体成员的名称,每个名称的最大长度为 13 个字符
+@param: const char *type: 结构体成员的类型, 1-uint32_t; 2-float；3-uint64_t
+@param: uint8_t len: 结构体成员的个数
+@param: uint16_t prefix: 打包的起始位置
+*/
 void pack_struct(void *p, const char name[][13], const char *type, uint8_t len, uint16_t prefix)
 {
-	  char var_name[13];
+    char var_name[13];
     memset(txDealBuf + prefix, 0, SEND_BUF_SIZE - prefix);
-	  memset(var_name, 0, 13);
+    memset(var_name, 0, 13);
     for (int i = 0; i < len; i++)
     {
         prefix = strlen((char *)txDealBuf);
-			  if (name == NULL)
-				{
-					var_name[0] = (char)((i%10)+'0');
-					var_name[1] = i / 10 ? (char)((i/10)+'0') : 0;
-				}
-				else
-				{
-					memcpy(var_name, name[i], 13);
-				}
+        if (name == NULL)
+        {
+            var_name[0] = (char)((i % 10) + '0');
+            var_name[1] = i / 10 ? (char)((i / 10) + '0') : 0;
+        }
+        else
+        {
+            memcpy(var_name, name[i], 13);
+        }
         switch (type[i])
         {
         case 1:
@@ -137,13 +142,13 @@ void unpack_to_struct(char *frame, void **p, const char name[][13], const char *
         exit = true;
     }
 }
-extern  wiz_NetInfo  cmdEthInfo;
+extern wiz_NetInfo cmdEthInfo;
 namespace TskEth
 {
-    const int tskStkSize = 512;//512
+    const int tskStkSize = 512; // 512
     uint8_t type = BoardType::idle;
     SteerCmd *steerCmd = nullptr;
-    SteerVal *steerVal = nullptr;
+    SteerRunValue *steerVal = nullptr;
     SteerCurInfo *steerCurCmd = nullptr;
     SteerCurInfo *steerCurVal = nullptr;
     FanCmd *fanCmd = nullptr;
@@ -155,27 +160,22 @@ namespace TskEth
     uint8_t io_pre_state = 0;
     uint8_t io_cur_state = 0;
 
-    
-    
-    QueueHandle_t steerCmdQueue;
-    QueueHandle_t steerValQueue;
+    QueueHandle_t steerCmdQueue;    // 用于缓存板子接收到的数据
+    QueueHandle_t steerValQueue;    // 用于缓存板子向上位机发送的数据
     QueueHandle_t fanCmdQueue;
     QueueHandle_t fanValQueue;
     QueueHandle_t adsorptionCmdQueue;
     QueueHandle_t adsorptionValQueue;
     QueueHandle_t rawDataQueue;
     QueueHandle_t sendDataQueue;
-		
-
-		
 
     void ethTransRecvTask(void *pvParameters)
     {
         BaseType_t rtn;
 
         int32_t ret;
-			
-			int32_t flag_ret =0;
+
+        int32_t flag_ret = 0;
         uint8_t sn = DATA_SN;
         uint16_t size = 0, sentsize = 0;
 #ifdef _DEBUG
@@ -186,15 +186,13 @@ namespace TskEth
         {
             rtn = xSemaphoreTake(ethTxTickSem, ethPeriod + 1);
             configASSERT(rtn);
-            
-            
-			flag_ret = getSn_SR(sn);
-			sprintf((char *)rxBuf, "flag_ret = %d\r\n",flag_ret);
+
+            flag_ret = getSn_SR(sn);
+            sprintf((char *)rxBuf, "flag_ret = %d\r\n", flag_ret);
             print((char *)rxBuf);
-            
-            
+
             switch (getSn_SR(sn))
-            { 
+            {
             case SOCK_ESTABLISHED:
                 if (getSn_IR(sn) & Sn_IR_CON)
                 {
@@ -205,16 +203,14 @@ namespace TskEth
                     print((char *)rxBuf);
 #endif
                     setSn_IR(sn, Sn_IR_CON);
-                    
-                    
                 }
-                memset(txBuf, 0, LEN_IDX+1);
+                memset(txBuf, 0, LEN_IDX + 1);
                 // 收、发任一操作进行时都需占用spi双向通信，因此不能进行全双工通信，因此将收发放在一起，另开线程进行解包
                 if (pdPASS == xQueueReceive(sendDataQueue, txBuf, 0))
                 {
                     size = strlen((char *)txBuf);
                     // size = txBuf[LEN_IDX];
-                    ret = send(sn, txBuf, size);                   
+                    ret = send(sn, txBuf, size);
                 }
                 if ((size = getSn_RX_RSR(sn)) > 0) // Don't need to check SOCKERR_BUSY because it doesn't not occur.
                 {
@@ -229,9 +225,9 @@ namespace TskEth
                 ret = disconnect(sn);
                 if (ret == SOCK_OK)
                 {
-#ifdef _DEBUG
+                #ifdef _DEBUG
                     print((char *)("Socket Closed\r\n"));
-#endif
+                #endif
                 }
                 break;
             case SOCK_INIT:
@@ -239,7 +235,7 @@ namespace TskEth
                 break;
             case SOCK_CLOSED:
                 ret = socket(sn, Sn_MR_TCP, ETH_DATA_PORT, 0x00);
-                setsockopt(sn, SO_KEEPALIVEAUTO, (void *)0);/////0
+                setsockopt(sn, SO_KEEPALIVEAUTO, (void *)0); /////0
                 break;
 
             default:
@@ -261,7 +257,7 @@ namespace TskEth
             rtn = xSemaphoreTake(ethDealTickSem, ethPeriod + 1);
             configASSERT(rtn);
 
-            // unpack control data
+            // TODO 解包接收到的数据
             if (pdPASS == xQueueReceive(rawDataQueue, rxDealBuf, 0))
             {
                 if (type == BoardType::ioState)
@@ -283,7 +279,7 @@ namespace TskEth
                     if (pdFAIL == xQueueOverwrite(steerCmdQueue, steerCmd))
                     {
                         print((char *)("steerCmd send error\r\n"));
-                    }                    
+                    }
                 }
                 else if (type > BoardType::steeringWheel)
                 {
@@ -317,7 +313,7 @@ namespace TskEth
             }
 
             uint16_t cur_prefix = 0;
-            // pack data to translation
+            // TODO 打包并发送数据
             memset(txDealBuf, 0, SEND_BUF_SIZE);
             {
                 if (type == BoardType::ioState)
@@ -337,7 +333,7 @@ namespace TskEth
                     }
 
                     void *p = ioVal;
-										pack_struct(p, IOValName, (const char *)IOValTypeRecord, IOValMemberNum, 0);
+                    pack_struct(p, IOValName, (const char *)IOValTypeRecord, IOValMemberNum, 0);
                 }
                 else if (type == BoardType::steeringCurrent)
                 {
@@ -371,6 +367,8 @@ namespace TskEth
                 {
                     xQueueReceive(steerValQueue, steerVal, 0);
                     void *p = steerVal;
+                    // * pack_struct函数的作用是将结构体的数据打包成一个字符串格式的字节数组，以便于传输或存储。
+                    // * 输入参数： 
                     pack_struct(p, SteerValName, (const char *)SteerValTypeRecord, SteerValMemberNum, 0);
                 }
                 // txDealBuf[LEN_IDX] = cur_prefix;
@@ -422,7 +420,7 @@ namespace TskEth
                 if (steerCmd == nullptr)
                     return;
 
-                steerVal = (SteerVal *)pvPortMalloc(sizeof(SteerVal));
+                steerVal = (SteerRunValue *)pvPortMalloc(sizeof(SteerRunValue));
                 if (steerVal == nullptr)
                     return;
 
@@ -437,7 +435,7 @@ namespace TskEth
                 steerCmdQueue = xQueueCreate(1, sizeof(SteerCmd));
                 configASSERT(steerCmdQueue);
 
-                steerValQueue = xQueueCreate(1, sizeof(SteerVal));
+                steerValQueue = xQueueCreate(1, sizeof(SteerRunValue));
                 configASSERT(steerValQueue);
             }
             else
@@ -452,18 +450,20 @@ namespace TskEth
             }
         }
 
+        // 用于接收数据的队列
         rawDataQueue = xQueueCreate(2, RECV_BUF_SIZE);
         configASSERT(rawDataQueue);
 
+        // 用于发送数据的队列
         sendDataQueue = xQueueCreate(1, SEND_BUF_SIZE);
         configASSERT(sendDataQueue);
 
         xMutex = xSemaphoreCreateMutex();
         configASSERT(xMutex != NULL);
         // Create tasks
-//        rtn = xTaskCreate(ethTransRecvTask, (const portCHAR *)"ethTransRecvTask",
-//                          tskStkSize, NULL, osPriorityBelowNormal1, NULL);
-//        configASSERT(rtn == pdPASS);
+        //        rtn = xTaskCreate(ethTransRecvTask, (const portCHAR *)"ethTransRecvTask",
+        //                          tskStkSize, NULL, osPriorityBelowNormal1, NULL);
+        //        configASSERT(rtn == pdPASS);
         rtn = xTaskCreate(ethDealTask, (const portCHAR *)"ethDealTask",
                           tskStkSize, NULL, osPriorityBelowNormal, NULL);
         configASSERT(rtn == pdPASS);

@@ -67,10 +67,12 @@ extern "C" {
   typedef struct
   {
     uint32_t state;     // 0:stop 1:start
+    // dr1 是舵轮的轮电机，只跑速度环
     float dr1_tar_vel;  // -0.3~0.3, m/s
     float dr1_real_vel; //
     float dr1_tar_cur;  // -19~19 , A
     float dr1_real_cur; //
+    // dr2 是舵轮的转向电机，跑速度环和位置环
     float dr2_tar_pos;  // -pi~pi , rad
     float dr2_real_pos; // -pi~pi , rad
     float dr2_tar_vel;  // -pi~pi , rad/s
@@ -78,7 +80,7 @@ extern "C" {
     float dr2_tar_cur;  // -9.5~9.5 , A
     float dr2_real_cur; //
     uint64_t timestamp; // us
-  } SteerVal;
+  } SteerRunValue;
   typedef struct
   {
     // dr1_cur  -19~19      -> 0~38000   31-16 16bit

@@ -111,14 +111,18 @@ int main(void)
     /* MCU Configuration--------------------------------------------------------*/
 
     /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-    HAL_Init();
+    HAL_Init(); // hal init 的作用：
+                // 1. 配置Flash预取、指令缓存、数据缓存
+                // 2. 设置中断优先级分组
+                // 3. 使用SysTick作为时间基准，并配置1ms滴答（默认复位后的时钟是HSI）
+                // 4. 初始化低级硬件
 
     /* USER CODE BEGIN Init */
 
     /* USER CODE END Init */
 
     /* Configure the system clock */
-    SystemClock_Config();
+    SystemClock_Config();   // 配置系统时钟
 
     /* USER CODE BEGIN SysInit */
 

@@ -5,9 +5,9 @@
 class Pid
 {
 private:
-    float p, i, d, n, ts;
-    float accI, accD, accIMax, accIMin, accDMax, accDMin, outMax, outMin, Iband;
+float accI, accD, accIMax, accIMin, accDMax, accDMin, outMax, outMin, Iband;
 public:
+    float p, i, d, n, ts;
     Pid(float p, float i, float d, float n, float ts,  float outIMin, float outIMax, float Iband, float outMin, float outMax);
     float Tick(float diff);
     void Reset();

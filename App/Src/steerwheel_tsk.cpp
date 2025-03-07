@@ -3,15 +3,16 @@
 #include "math.h"
 
 #include "cmd_tsk.h"
+
 namespace TskSteer
 {
     const int tskStkSize = 512;
     SteerCmd *steerCmd = nullptr;
-    SteerVal *steerVal = nullptr;
+    SteerRunValue *steerVal = nullptr;
     moto_measure_t *motor = nullptr;
     uint32_t steerCnt = 0;
 
-    // linear velocity (m/s) to motor rotate speed (rpm)
+    // linear velocity (m/s) to motor rotate speed (rpm) 
     inline float dr1_vel2rpm(const float vel)
     {
         return vel * ratio * toRPM / wheelR;
@@ -53,18 +54,26 @@ namespace TskSteer
         BaseType_t rtn;
         can1RxQueueHandle = xQueueCreate(4, sizeof(moto_measure_t));
 
+        // 初始化CAN并使能中断
         CAN_Start_Trans();
         // dr1 vel loop
-        Pid vVelPidMotion(vVelPidP, vVelPidI, vVelPidD, 1,
-                          motorTs, -0.95f * C610Current, 0.95f * C610Current, vVelPidIband, -0.95f * C610Current, 0.95f * C610Current);
+        // TODO 配置电机的位置环、速度环参数
+        Pid wheelSpeedPID(vVelPidP, vVelPidI, vVelPidD, 1,
+                          motorTs, -0.95f * C610Current, 
+                          0.95f * C610Current, vVelPidIband, 
+                        -0.95f * C610Current, 0.95f * C610Current);
 
         // dr2 pos loop
-        ffPid thPosPidMotion(thPosPidP, thPosPidI, 50,
-                             motorTs, -maxSteerOmg / 5, maxSteerOmg / 5, thPosPidIband, -maxSteerOmg, maxSteerOmg);
+        ffPid steerPosPID(thPosPidP, thPosPidI, 50,
+                            motorTs, -maxSteerOmg / 5, 
+                            maxSteerOmg / 5, thPosPidIband, 
+                            -maxSteerOmg, maxSteerOmg);
 
         // dr2 vel loop
-        Pid thVelPidMotion(thVelPidP, thVelPidI, thVelPidD, 1,
-                           motorTs, -0.95f * C610Current, 0.95f * C610Current, thVelPidIband, -0.95f * C610Current, 0.95f * C610Current);
+        Pid steerSpeedPID(thVelPidP, thVelPidI, thVelPidD, 1,
+                           motorTs, -0.95f * C610Current, 
+                           0.95f * C610Current, thVelPidIband, 
+                           -0.95f * C610Current, 0.95f * C610Current);
 
         float dr1_delta_v = 0.f, dr2_delta_p = 0.f;
         float dr1_tar_i = 0.f, dr2_tar_i = 0.f;
@@ -75,8 +84,11 @@ namespace TskSteer
 
         while (true)
         {
+            // 在每次循环开始都会尝试获取motionTickSem信号量，当没有这个信号量时会阻塞在这里
+            // 信号像需要再其他地方被重新Give
             rtn = xSemaphoreTake(motionTickSem, 2);
             configASSERT(rtn);
+
             steerCnt++;
             // update motor info
             if (pdPASS == xQueueReceive(can1RxQueueHandle, motor, 0))
@@ -97,11 +109,15 @@ namespace TskSteer
             // update motor control command
             xQueueReceive(TskEth::steerCmdQueue, steerCmd, 0);
 
+            // 5ms更新一次电机指令（控制频率200Hz）
             if (steerCnt % motorTick == 0)
             {
-                if (steerCmd->state == steerState::RESET && steerVal->state != steerState::RESETOVER)
+                if (steerCmd->state == steerState::RESET && 
+                    steerVal->state != steerState::RESETOVER)
                 {
-                    if (steerVal->state != steerState::RESETTING && fabs(steerVal->dr1_real_vel) < 0.05f && fabs(steerVal->dr2_real_vel) < 0.05f)
+                    if (steerVal->state != steerState::RESETTING && 
+                        fabs(steerVal->dr1_real_vel) < 0.05f && 
+                        fabs(steerVal->dr2_real_vel) < 0.05f)
                     {
                         steerCmd->dr1_tar_vel = 0.f;
                         // pi/2 rad/s旋转
@@ -137,15 +153,16 @@ namespace TskSteer
                 {
                     steerVal->state = steerCmd->state;
                     // dr1 限幅，单位换算 m/s to rad/s，计算增量
+                    // 计算轮电机与期望速度的差值，并将偏差m/s转换为rpm
                     dr1_delta_v = dr1_vel2rpm(saturate(steerCmd->dr1_tar_vel, maxVel, -maxVel) - steerVal->dr1_real_vel);
                     // dr2 限幅，优弧处理，计算增量
                     dr2_delta_p = cacul_ppi_angle(saturate(steerCmd->dr2_tar_pos, PI, -PI), steerVal->dr2_real_pos);
                 }
                 else if (steerCmd->state == steerState::STOP)
                 {
-                    vVelPidMotion.Reset();
-                    thPosPidMotion.Reset();
-                    thVelPidMotion.Reset();
+                    wheelSpeedPID.Reset();
+                    steerPosPID.Reset();
+                    steerSpeedPID.Reset();
                     steerVal->state = steerState::STOP;
                 }
             }
@@ -171,8 +188,8 @@ namespace TskSteer
                     // dr2 限幅，优弧处理，计算增量
                     dr2_delta_p = cacul_ppi_angle(saturate(steerCmd->dr2_tar_pos, PI, -PI), steerVal->dr2_real_pos);
                     if (steerVal->state != steerState::RESETTING)
-                        steerVal->dr2_tar_vel = thPosPidMotion.Tick(dr2_delta_p, 0.f);
-                    dr2_tar_i = thVelPidMotion.Tick(steerVal->dr2_tar_vel - steerVal->dr2_real_vel);
+                        steerVal->dr2_tar_vel = steerPosPID.Tick(dr2_delta_p, 0.f);
+                    dr2_tar_i = steerSpeedPID.Tick(steerVal->dr2_tar_vel - steerVal->dr2_real_vel);
                     steerVal->dr2_tar_cur = dr2_tar_i * C610ICoeff;
                     curCmd[2] = (int)dr2_tar_i >> 8;
                     curCmd[3] = (int)dr2_tar_i & 0xFF;
@@ -181,10 +198,11 @@ namespace TskSteer
             }
             else if (steerCmd->state > steerState::STOP && steerVal->state < steerState::RESETOVER)
             {                    
+                // 正常运行时进入这里
                 if (steerCnt % motorTick == 0)
                 {
                     // dr1 计算电流，更新指令
-                    dr1_tar_i = vVelPidMotion.Tick(dr1_delta_v);
+                    dr1_tar_i = wheelSpeedPID.Tick(dr1_delta_v);
                     // 转速控制时，目标电流通过计算值更新
                     steerCmd->dr1_tar_cur = dr1_tar_i * C610ICoeff;
                     curCmd[0] = (int)dr1_tar_i >> 8;
@@ -192,12 +210,13 @@ namespace TskSteer
                     // dr2 计算轮速，电流，更新指令
                     // 复位过程中，轮速固定，其他过程中通过PID计算得到
                     if (steerVal->state != steerState::RESETTING)
-                        steerVal->dr2_tar_vel = thPosPidMotion.Tick(dr2_delta_p, 0.f);
-                    dr2_tar_i = thVelPidMotion.Tick(steerVal->dr2_tar_vel - steerVal->dr2_real_vel);
+                        steerVal->dr2_tar_vel = steerPosPID.Tick(dr2_delta_p, 0.f);
+                    dr2_tar_i = steerSpeedPID.Tick(steerVal->dr2_tar_vel - steerVal->dr2_real_vel);
                     steerVal->dr2_tar_cur = dr2_tar_i * C610ICoeff;
                     curCmd[2] = (int)dr2_tar_i >> 8;
                     curCmd[3] = (int)dr2_tar_i & 0xFF;
-                    memset(curCmd + 4, 0, 4);
+                    // 将后四个字节清零，一次CAN帧可以控制四个电机，这里只使用了两个
+                    memset(curCmd + 4, 0, 4);   
                 }
             }
             else
@@ -208,6 +227,7 @@ namespace TskSteer
                 steerCmd->dr2_tar_pos = steerVal->dr2_real_pos;
                 steerVal->dr2_tar_vel = 0.f;
                 steerVal->dr2_tar_cur = 0.f;
+                // 失能所有电机
                 memset(curCmd, 0, 8);
             }
             CAN_SendMsg(CAN_Moto_ALL_ID, curCmd);
@@ -218,12 +238,11 @@ namespace TskSteer
                 steerVal->dr1_tar_vel = steerCmd->dr1_tar_vel;
                 steerVal->dr1_tar_cur = steerCmd->dr1_tar_cur;
                 steerVal->dr2_tar_pos = steerCmd->dr2_tar_pos;
+                // 将steerVal的数据发送到steerValQueue队列中（任务间通信）
                 xQueueOverwrite(TskEth::steerValQueue, steerVal);
             }
-            
-            
-//            print((char *)"steerwheel_tsk\r\n");
-//             osDelay(2);
+            // print((char *)"steerwheel_tsk\r\n");
+            //  osDelay(2);
         }
     }
 
@@ -231,11 +250,12 @@ namespace TskSteer
     {
         BaseType_t rtn;
 
+        // 为指针指向的Class分配内存
         steerCmd = (SteerCmd *)pvPortMalloc(sizeof(SteerCmd));
         if (steerCmd == nullptr)
             return;
 
-        steerVal = (SteerVal *)pvPortMalloc(sizeof(SteerVal));
+        steerVal = (SteerRunValue *)pvPortMalloc(sizeof(SteerRunValue));
         if (steerVal == nullptr)
             return;
 
@@ -247,5 +267,7 @@ namespace TskSteer
         rtn = xTaskCreate(steerTask, (const portCHAR *)"steerTask",
                           tskStkSize, NULL, osPriorityAboveNormal, NULL);
         configASSERT(rtn == pdPASS);
+
+        // #define configASSERT( x ) if ((x) == 0) {taskDISABLE_INTERRUPTS(); for( ;; );}
     }
 }

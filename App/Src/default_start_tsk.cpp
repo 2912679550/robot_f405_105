@@ -12,7 +12,6 @@ char dbgStr[CMD_BUF_SIZE];
 uint8_t cmdRxBuf[CMD_BUF_SIZE];
 uint8_t cmdTxBuf[CMD_BUF_SIZE];
 
-
 extern uint8_t rxBuf[RECV_BUF_SIZE];
 extern uint8_t txBuf[SEND_BUF_SIZE];
 int8_t is_ipv4_addr(char *ip, uint8_t *real_ip)
@@ -107,23 +106,32 @@ static void MX_IO_Init(void)
     HAL_GPIO_Init(LED_1_GPIO_Port, &GPIO_InitStruct);
 }
 
+// 解析并设置以太网配置参数，包括 IP 地址、板类型和反馈频率
+// 返回值 res = 0b00000111，表示配置成功，从低到高位分别表示：
+// IP地址配置成功、板类型配置成功、反馈频率配置成功
 uint8_t ip_set_unpack(uint8_t *buf, wiz_NetInfo *ethInfo, uint8_t cmdType)
 {
-    uint8_t res = 0;
-    uint16_t freq = 100;
+    uint8_t res = 0;    // 返回值标志位
+    uint16_t freq = 100;// 反馈频率
     const char *d = " ";
     char *cmd;
-    bool exit = false;
+    bool exit = false;  // 退出标志
 
     while (!exit)
     {
-        cmd = strtok((char *)buf, d);
-        char cmd_s[2][20];
+        // 以空格分割字符串，将字符串分割为一组字符串存储在数组中
+        cmd = strtok((char *)buf, d);   
+        char cmd_s[2][20];  // cmd_s 为一个可以存储2个长度最长为20的字符串的数组
         while (cmd != NULL)
         {
+            // 以冒号分割字符串，将字符串分割为一组字符串存储在数组中，类似一个正则表达式
+            // cmd_s[0] 存储的是配置目标信息，cmd_s[1] 存储的是配置值
             sscanf(cmd, "%[^:]:%s", cmd_s[0], cmd_s[1]);
-            if (!strcmp(cmd_s[0], "ip"))
+            // strcmp函数的返回值：相等返回0，不相等返回非0
+            if (!strcmp(cmd_s[0], "ip"))    // 配置IP地址
             {
+                // is_ipv4_addr 函数用于判断IP地址是否合法
+                // 不合法时返回-1
                 if (is_ipv4_addr(cmd_s[1], ethInfo->ip) == -1)
                 {
                     if (cmdType == cmdType::UARTCMD)
@@ -242,17 +250,19 @@ void sendTask(void *pvParameters)
         send(CMD_SN, cmdTxBuf, size);
     }
 }
-//wiz_NetInfo defaultEthInfo, cmdEthInfo;
+// wiz_NetInfo defaultEthInfo, cmdEthInfo;
+
+
+
 void StartDefaultTask(void *argument)
 {
     /* USER CODE BEGIN 5 */
     /* Infinite loop */
-    BaseType_t rtn=pdPASS;
-    uint8_t  res = 0;
+    BaseType_t rtn = pdPASS;
+    uint8_t res = 0;
     uint16_t size = 0;
 
-
-//    uint8_t *cpu_run_info;
+    //    uint8_t *cpu_run_info;
     TickType_t curTick = xTaskGetTickCount();
 
     TskPrint::Init();
@@ -308,31 +318,31 @@ void StartDefaultTask(void *argument)
 
     sprintf(dbgStr, "if TIMEOUT, using the last setting\r\n");
     print(dbgStr);
-		  
-    int32_t ret=0;	
-    int32_t flag_ret =0;
+
+    int32_t ret = 0;
+    int32_t flag_ret = 0;
     uint16_t sentsize = 0;
-//    uint8_t rxBuf[RECV_BUF_SIZE]={0};
-//    uint8_t txBuf[SEND_BUF_SIZE]={0};
-		
-//		
-//		
-//		int erase = at24_eraseChip();
-//		HAL_Delay(2000);
-//		if(erase)
-//		    sprintf(dbgStr, "at24_eraseChip\r\n");
-//		else
-//			sprintf(dbgStr, "at24_erase Error!\r\n");
-//    print(dbgStr);
+    //    uint8_t rxBuf[RECV_BUF_SIZE]={0};
+    //    uint8_t txBuf[SEND_BUF_SIZE]={0};
+    //
+    //
+    //		int erase = at24_eraseChip();
+    //		HAL_Delay(2000);
+    //		if(erase)
+    //		    sprintf(dbgStr, "at24_eraseChip\r\n");
+    //		else
+    //			sprintf(dbgStr, "at24_erase Error!\r\n");
+    //    print(dbgStr);
 
     // 获取默认参数
-    W5500_get_config(&defaultEthInfo);
+    W5500_get_config(&defaultEthInfo);  // 从芯片的物理存储器中读取配置信息
     memcpy(&cmdEthInfo, &defaultEthInfo, sizeof(wiz_NetInfo));
     /* Infinite loop */
     for (;;)
     {
-        // 启动后等待2s，确认是否配置ip type freq
-        if (xQueueReceive(TskPrint::uartDMAQueue, cmdRxBuf, 0) && (xTaskGetTickCount() - curTick) < CMD_TIMEOUT)
+        // 启动后等待，确认是否配置ip type freq
+        if (xQueueReceive(TskPrint::uartDMAQueue, cmdRxBuf, 0) &&
+            (xTaskGetTickCount() - curTick) < CMD_TIMEOUT)
         {
             res = ip_set_unpack(cmdRxBuf, &cmdEthInfo, cmdType::UARTCMD);
         }
@@ -346,7 +356,8 @@ void StartDefaultTask(void *argument)
         {
             W5500_init(&cmdEthInfo);
             ethPeriod = cmdEthInfo.period;
-            sprintf(dbgStr, "ip:%d.%d.%d.%d, type:%d, freq:%d\r\n", cmdEthInfo.ip[0], cmdEthInfo.ip[1], cmdEthInfo.ip[2],
+            sprintf(dbgStr, "ip:%d.%d.%d.%d, type:%d, freq:%d\r\n",
+                    cmdEthInfo.ip[0], cmdEthInfo.ip[1], cmdEthInfo.ip[2],
                     cmdEthInfo.ip[3], cmdEthInfo.type, 1000 / ethPeriod);
             print(dbgStr);
 
@@ -359,6 +370,7 @@ void StartDefaultTask(void *argument)
                               512, NULL, osPriorityLow, NULL);
             configASSERT(rtn == pdPASS);
 
+            // 如果是吸附板，启动吸附任务
             if (cmdEthInfo.type == BoardType::activeAdsorption || cmdEthInfo.type == BoardType::normalAdsorption)
             {
                 if (cmdEthInfo.type == BoardType::activeAdsorption)
@@ -368,6 +380,7 @@ void StartDefaultTask(void *argument)
                 TskFan::Init();
                 HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
             }
+            // 舵轮控制板，启动舵轮任务
             else if (cmdEthInfo.type == BoardType::steeringWheel || cmdEthInfo.type == BoardType::steeringCurrent)
             {
                 TskSteer::Init();
@@ -378,18 +391,22 @@ void StartDefaultTask(void *argument)
                 MX_IO_Init();
             }
             // check task to ethernet 5001 recv task, DO NOT deal uart cmd!
-            res = 0xF;
+            res = 0xF;  // 完成网络通信初始化与配置，开始接收数据
         }
-        else if(res == 0xf)
+        else if (res == 0xf)
         {
-//            flag_ret = getSn_SR(CMD_SN);
-//			sprintf((char *)rxBuf, "cmd_ret = %d\r\n",flag_ret);
-//            print((char *)rxBuf);
-            
+            // TODO // 最主要的收发数据任务，收发数据的主要任务是通过 W5500 以太网芯片实现的。
+            // TODO // W5500 芯片负责处理 TCP/IP 协议栈，并通过 SPI 接口与主控 MCU 通信。
+            //            flag_ret = getSn_SR(CMD_SN);
+            //			sprintf((char *)rxBuf, "cmd_ret = %d\r\n",flag_ret);
+            //            print((char *)rxBuf);
+
+            // * 命令处理部分
             switch (getSn_SR(CMD_SN))
             {
-                case SOCK_ESTABLISHED:
-                 osDelay(1);
+            // 当命令端口建立连接时，检查是否有新的命令数据，接收数据并解析命令
+            case SOCK_ESTABLISHED:
+                osDelay(1);
                 if (getSn_IR(CMD_SN) & Sn_IR_CON)
                 {
                     setSn_IR(CMD_SN, Sn_IR_CON);
@@ -412,51 +429,52 @@ void StartDefaultTask(void *argument)
                     ip_set_unpack(cmdRxBuf, &cmdEthInfo, cmdType::ETHCMD);
                 }
                 break;
+            // 当命令端口关闭时，断开连接
             case SOCK_CLOSE_WAIT:
                 disconnect(CMD_SN);
                 break;
+            // 当命令端口初始化时，监听端口
             case SOCK_INIT:
                 listen(CMD_SN);
                 break;
+            // 当命令端口关闭时，重新建立连接
             case SOCK_CLOSED:
-                
                 socket(CMD_SN, Sn_MR_TCP, ETH_CMD_PORT, 0x00);
                 setsockopt(CMD_SN, SO_KEEPALIVEAUTO, (void *)0);
-            
                 break;
-					
-									
             default:
                 break;
             }
-            
-           
+
             rtn = xSemaphoreTake(ethTxTickSem, ethPeriod + 1);
             configASSERT(rtn);
-            
-            
-//			flag_ret = getSn_SR(DATA_SN);
-//			sprintf((char *)rxBuf, "flag_ret = %d\r\n",flag_ret);
-//            print((char *)rxBuf);
-            
-            
+
+            //	flag_ret = getSn_SR(DATA_SN);
+            //	sprintf((char *)rxBuf, "flag_ret = %d\r\n",flag_ret);
+            //  print((char *)rxBuf);
+
+            // * 数据处理部分 
             switch (getSn_SR(DATA_SN))
-            { 
+            {
+            // 当数据端口建立连接时，检查是否有新的数据需要发送或接收
             case SOCK_ESTABLISHED:
                 if (getSn_IR(DATA_SN) & Sn_IR_CON)
                 {
 
                     setSn_IR(DATA_SN, Sn_IR_CON);
-                       
                 }
-                memset(txBuf, 0, LEN_IDX+1);
+                memset(txBuf, 0, LEN_IDX + 1);
                 // 收、发任一操作进行时都需占用spi双向通信，因此不能进行全双工通信，因此将收发放在一起，另开线程进行解包
+
+                // 从发送队列中获取数据，发送数据
                 if (pdPASS == xQueueReceive(TskEth::sendDataQueue, txBuf, 0))
                 {
                     size = strlen((char *)txBuf);
                     // size = txBuf[LEN_IDX];
-                    ret = send(DATA_SN, txBuf, size);                   
+                    ret = send(DATA_SN, txBuf, size);
                 }
+
+                // 接收数据
                 if ((size = getSn_RX_RSR(DATA_SN)) > 0) // Don't need to check SOCKERR_BUSY because it doesn't not occur.
                 {
                     memset(rxBuf, 0, RECV_BUF_SIZE);
@@ -470,9 +488,9 @@ void StartDefaultTask(void *argument)
                 ret = disconnect(DATA_SN);
                 if (ret == SOCK_OK)
                 {
-#ifdef _DEBUG
+                    #ifdef _DEBUG
                     print((char *)("Socket Closed\r\n"));
-#endif
+                    #endif
                 }
                 break;
             case SOCK_INIT:
@@ -480,23 +498,16 @@ void StartDefaultTask(void *argument)
                 break;
             case SOCK_CLOSED:
                 ret = socket(DATA_SN, Sn_MR_TCP, ETH_DATA_PORT, 0x00);
-                setsockopt(DATA_SN, SO_KEEPALIVEAUTO, (void *)0);/////0
-            
-            
+                setsockopt(DATA_SN, SO_KEEPALIVEAUTO, (void *)0); /////0
                 socket(CMD_SN, Sn_MR_TCP, ETH_CMD_PORT, 0x00);
                 setsockopt(CMD_SN, SO_KEEPALIVEAUTO, (void *)0);
-            
                 break;
-
             default:
-
                 break;
             }
-         
         }
         if ((xTaskGetTickCount() / 100) % 20 == 0)
         {
-
         }
         osDelay(10);
     }

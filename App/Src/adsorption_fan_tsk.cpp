@@ -30,8 +30,7 @@ namespace TskFan
 
     inline float saturate(float v, float max, float min)
     {
-        return v > max ? max : v < min ? min
-                                       : v;
+        return v > max ? max : v < min ? min: v;
     }
 
     void fanTask(void *pvParameters)
