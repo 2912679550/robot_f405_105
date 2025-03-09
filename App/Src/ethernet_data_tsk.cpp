@@ -374,7 +374,7 @@ namespace TskEth
                 // txDealBuf[LEN_IDX] = cur_prefix;
                 xQueueSend(sendDataQueue, txDealBuf, 1);
             }
-        }
+        }  
     }
 
     void Init()
