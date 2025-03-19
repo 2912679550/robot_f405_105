@@ -1,9 +1,8 @@
 #include "main.h"
 #include "w5500_dev.h"
 #include "ethernet_tsk.h"
-#include "adsorption_fan_tsk.h"
-#include "adsorption_motion_tsk.h"
-#include "steerwheel_tsk.h"
+#include "main_assist_board_tsk.h"
+#include "push_board_tsk.h"
 #include "cmd_tsk.h"
 #include <string.h>
 #include "at24cxx.h"
@@ -79,32 +78,32 @@ uint8_t *ipv4_addr(char *ip)
     return real_ip;
 }
 
-// io扩展板，与4路ADC引脚复用
-static void MX_IO_Init(void)
-{
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    // PC0 PC1 input
-    GPIO_InitStruct.Pin = KEY_0_Pin | KEY_1_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    // 引脚悬空，避免默认状态下板切换类型时电平冲突
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(KEY_GPIO_Port, &GPIO_InitStruct);
-
-    // PC2 output
-    GPIO_InitStruct.Pin = LED_0_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    // 引脚悬空，避免板切换类型时电平冲突
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(LED_0_GPIO_Port, &GPIO_InitStruct);
-
-    // PA3 output
-    GPIO_InitStruct.Pin = LED_1_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    // 引脚悬空，避免板切换类型时电平冲突
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(LED_1_GPIO_Port, &GPIO_InitStruct);
-}
+// // // io扩展板，与4路ADC引脚复用
+// // static void MX_IO_Init(void)
+// // {
+// //     GPIO_InitTypeDef GPIO_InitStruct = {0};
+// //     // PC0 PC1 input
+// //     GPIO_InitStruct.Pin = KEY_0_Pin | KEY_1_Pin;
+// //     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+// //     // 引脚悬空，避免默认状态下板切换类型时电平冲突
+// //     GPIO_InitStruct.Pull = GPIO_NOPULL;
+// //     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+// //     HAL_GPIO_Init(KEY_GPIO_Port, &GPIO_InitStruct);
+// 
+// //     // PC2 output
+// //     GPIO_InitStruct.Pin = LED_0_Pin;
+// //     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+// //     // 引脚悬空，避免板切换类型时电平冲突
+// //     GPIO_InitStruct.Pull = GPIO_NOPULL;
+// //     HAL_GPIO_Init(LED_0_GPIO_Port, &GPIO_InitStruct);
+// 
+// //     // PA3 output
+// //     GPIO_InitStruct.Pin = LED_1_Pin;
+// //     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+// //     // 引脚悬空，避免板切换类型时电平冲突
+// //     GPIO_InitStruct.Pull = GPIO_NOPULL;
+// //     HAL_GPIO_Init(LED_1_GPIO_Port, &GPIO_InitStruct);
+// // }
 
 // 解析并设置以太网配置参数，包括 IP 地址、板类型和反馈频率
 // 返回值 res = 0b00000111，表示配置成功，从低到高位分别表示：
@@ -162,7 +161,7 @@ uint8_t ip_set_unpack(uint8_t *buf, wiz_NetInfo *ethInfo, uint8_t cmdType)
             else if (!strcmp(cmd_s[0], "type"))
             {
                 ethInfo->type = cmd_s[1][0] - '0';
-                if (ethInfo->type < BoardType::steeringWheel || ethInfo->type > BoardType::steeringCurrent)
+                if (ethInfo->type < BORAD_TYPE::MAIN_BOARD || ethInfo->type > BORAD_TYPE::PUSH_BOARD)
                 {
                     if (cmdType == cmdType::UARTCMD)
                     {
@@ -262,7 +261,7 @@ void StartDefaultTask(void *argument)
     uint8_t res = 0;
     uint16_t size = 0;
 
-    //    uint8_t *cpu_run_info;
+    // uint8_t *cpu_run_info;
     TickType_t curTick = xTaskGetTickCount();
 
     TskPrint::Init();
@@ -292,30 +291,20 @@ void StartDefaultTask(void *argument)
 
     wiz_NetInfo defaultEthInfo, cmdEthInfo;
 
-    sprintf(dbgStr, "\f===== Welcome to the Console MUST add space in the end =====\r\n");
+    sprintf(dbgStr, "\f===== Welcome to the Console , MUST add space in the end =====\r\n");
     print(dbgStr);
-
     sprintf(dbgStr, "Please input ip:val type:val freq:val \r\n");
     print(dbgStr);
-
     sprintf(dbgStr, "For type:\r\n");
     print(dbgStr);
-
-    sprintf(dbgStr, "\t 1 steering wheel \r\n");
+    sprintf(dbgStr, "\t 1 main steering wheel \r\n");
     print(dbgStr);
-
-    sprintf(dbgStr, "\t 2 active adsorption \r\n");
+    sprintf(dbgStr, "\t 2 assist steering wheel \r\n");
     print(dbgStr);
-
-    sprintf(dbgStr, "\t 3 normal adsorption \r\n");
+    sprintf(dbgStr, "\t 3 push stick ctrl \r\n");
     print(dbgStr);
-
-    sprintf(dbgStr, "\t 4 io state \r\n");
-    print(dbgStr);
-
     sprintf(dbgStr, "freq (MUST NOT larger than 200)\r\n\r\n");
     print(dbgStr);
-
     sprintf(dbgStr, "if TIMEOUT, using the last setting\r\n");
     print(dbgStr);
 
@@ -324,8 +313,6 @@ void StartDefaultTask(void *argument)
     uint16_t sentsize = 0;
     //    uint8_t rxBuf[RECV_BUF_SIZE]={0};
     //    uint8_t txBuf[SEND_BUF_SIZE]={0};
-    //
-    //
     //		int erase = at24_eraseChip();
     //		HAL_Delay(2000);
     //		if(erase)
@@ -370,37 +357,29 @@ void StartDefaultTask(void *argument)
                               512, NULL, osPriorityLow, NULL);
             configASSERT(rtn == pdPASS);
 
-            // 如果是吸附板，启动吸附任务
-            if (cmdEthInfo.type == BoardType::activeAdsorption || cmdEthInfo.type == BoardType::normalAdsorption)
+
+            // * 至此已经完成板子自身IP等的设置，开始根据板子类型创建对应的单线程任务
+            if (cmdEthInfo.type == BORAD_TYPE::MAIN_BOARD)
             {
-                if (cmdEthInfo.type == BoardType::activeAdsorption)
-                {
-                    TskMotion::Init();
-                }
-                TskFan::Init();
-                HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
+                TskSteerBoard::boradType_ = BORAD_TYPE::MAIN_BOARD;
+                TskSteerBoard::Init();
             }
-            // 舵轮控制板，启动舵轮任务
-            else if (cmdEthInfo.type == BoardType::steeringWheel || cmdEthInfo.type == BoardType::steeringCurrent)
-            {
-                TskSteer::Init();
+            else if(cmdEthInfo.type == BORAD_TYPE::ASSIST_BOARD){
+                TskSteerBoard::boradType_ = BORAD_TYPE::ASSIST_BOARD;
+                TskSteerBoard::Init();
             }
-            // pinmux, init task
-            else if (cmdEthInfo.type == BoardType::ioState)
-            {
-                MX_IO_Init();
+            else if(cmdEthInfo.type == BORAD_TYPE::PUSH_BOARD){
+                TskPushBoard::Init();
             }
+
             // check task to ethernet 5001 recv task, DO NOT deal uart cmd!
             res = 0xF;  // 完成网络通信初始化与配置，开始接收数据
         }
         else if (res == 0xf)
         {
-            // TODO // 最主要的收发数据任务，收发数据的主要任务是通过 W5500 以太网芯片实现的。
-            // TODO // W5500 芯片负责处理 TCP/IP 协议栈，并通过 SPI 接口与主控 MCU 通信。
-            //            flag_ret = getSn_SR(CMD_SN);
-            //			sprintf((char *)rxBuf, "cmd_ret = %d\r\n",flag_ret);
-            //            print((char *)rxBuf);
-
+            // ! 此时已经完成了任务线程的初始化，本线程将转换为处理以太网通信数据的线程
+            // TODO 最主要的收发数据任务，收发数据的主要任务是通过 W5500 以太网芯片实现的。
+            // TODO W5500 芯片负责处理 TCP/IP 协议栈，并通过 SPI 接口与主控 MCU 通信。
             // * 命令处理部分
             switch (getSn_SR(CMD_SN))
             {
@@ -453,7 +432,7 @@ void StartDefaultTask(void *argument)
             //	sprintf((char *)rxBuf, "flag_ret = %d\r\n",flag_ret);
             //  print((char *)rxBuf);
 
-            // * 数据处理部分 
+            // * 32向PC数据发送部分 
             switch (getSn_SR(DATA_SN))
             {
             // 当数据端口建立连接时，检查是否有新的数据需要发送或接收

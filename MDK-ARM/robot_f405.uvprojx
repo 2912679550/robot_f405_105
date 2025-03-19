@@ -630,16 +630,6 @@
           <GroupName>App</GroupName>
           <Files>
             <File>
-              <FileName>adsorption_fan_tsk.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\App\Src\adsorption_fan_tsk.cpp</FilePath>
-            </File>
-            <File>
-              <FileName>adsorption_motion_tsk.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\App\Src\adsorption_motion_tsk.cpp</FilePath>
-            </File>
-            <File>
               <FileName>cmd_tsk.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>..\App\Src\cmd_tsk.cpp</FilePath>
@@ -655,9 +645,19 @@
               <FilePath>..\App\Src\ethernet_data_tsk.cpp</FilePath>
             </File>
             <File>
-              <FileName>steerwheel_tsk.cpp</FileName>
+              <FileName>public_func.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>..\App\Src\steerwheel_tsk.cpp</FilePath>
+              <FilePath>..\App\Src\public_func.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>main_assist_board_tsk.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\App\Src\main_assist_board_tsk.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>push_board_tsk.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\App\Src\push_board_tsk.cpp</FilePath>
             </File>
           </Files>
         </Group>
@@ -724,7 +724,7 @@
   <LayerInfo>
     <Layers>
       <Layer>
-        <LayName>&lt;Project Info&gt;</LayName>
+        <LayName>robot_f405</LayName>
         <LayTarg>0</LayTarg>
         <LayPrjMark>1</LayPrjMark>
       </Layer>

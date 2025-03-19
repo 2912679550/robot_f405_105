@@ -23,6 +23,24 @@ Pid::Pid(float p, float i, float d, float n, float ts, float outIMin, float outI
     this->outMin = outMin;
 }
 
+Pid::Pid(PID_PARAM *param)
+{
+    this->p = param->p;
+    this->i = param->i;
+    this->d = param->d;
+    this->n = param->n;
+    this->ts = param->ts;
+    this->accI = .0f;
+    this->accD = .0f;
+    this->accIMin = param->outIMin;
+    this->accIMax = param->outIMax;
+    this->Iband = param->Iband; // integral separated
+    this->accDMin = param->outMin / n;
+    this->accDMax = param->outMax / n;
+    this->outMax = param->outMax;
+    this->outMin = param->outMin;
+}
+
 void Pid::SetParam(float p, float i)
 {
     this->p = p;

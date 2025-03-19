@@ -146,104 +146,17 @@ extern wiz_NetInfo cmdEthInfo;
 namespace TskEth
 {
     const int tskStkSize = 512; // 512
-    uint8_t type = BoardType::idle;
+    uint8_t type = BORAD_TYPE::idle;
     SteerCmd *steerCmd = nullptr;
     SteerRunValue *steerVal = nullptr;
     SteerCurInfo *steerCurCmd = nullptr;
     SteerCurInfo *steerCurVal = nullptr;
-    FanCmd *fanCmd = nullptr;
-    FanVal *fanVal = nullptr;
-    AdsorptionCmd *adsorptionCmd = nullptr;
-    AdsorptionVal *adsorptionVal = nullptr;
-    IOCmd *ioCmd = nullptr;
-    IOVal *ioVal = nullptr;
-    uint8_t io_pre_state = 0;
-    uint8_t io_cur_state = 0;
 
     QueueHandle_t steerCmdQueue;    // 用于缓存板子接收到的数据
     QueueHandle_t steerValQueue;    // 用于缓存板子向上位机发送的数据
-    QueueHandle_t fanCmdQueue;
-    QueueHandle_t fanValQueue;
-    QueueHandle_t adsorptionCmdQueue;
-    QueueHandle_t adsorptionValQueue;
+
     QueueHandle_t rawDataQueue;
     QueueHandle_t sendDataQueue;
-
-    void ethTransRecvTask(void *pvParameters)
-    {
-        BaseType_t rtn;
-
-        int32_t ret;
-
-        int32_t flag_ret = 0;
-        uint8_t sn = DATA_SN;
-        uint16_t size = 0, sentsize = 0;
-#ifdef _DEBUG
-        uint8_t destip[4];
-        uint16_t destport;
-#endif
-        while (true)
-        {
-            rtn = xSemaphoreTake(ethTxTickSem, ethPeriod + 1);
-            configASSERT(rtn);
-
-            flag_ret = getSn_SR(sn);
-            sprintf((char *)rxBuf, "flag_ret = %d\r\n", flag_ret);
-            print((char *)rxBuf);
-
-            switch (getSn_SR(sn))
-            {
-            case SOCK_ESTABLISHED:
-                if (getSn_IR(sn) & Sn_IR_CON)
-                {
-#ifdef _DEBUG
-                    getSn_DIPR(sn, destip);
-                    destport = getSn_DPORT(sn);
-                    sprintf((char *)rxBuf, "Connected - %d.%d.%d.%d : %d\r\n", destip[0], destip[1], destip[2], destip[3], destport);
-                    print((char *)rxBuf);
-#endif
-                    setSn_IR(sn, Sn_IR_CON);
-                }
-                memset(txBuf, 0, LEN_IDX + 1);
-                // 收、发任一操作进行时都需占用spi双向通信，因此不能进行全双工通信，因此将收发放在一起，另开线程进行解包
-                if (pdPASS == xQueueReceive(sendDataQueue, txBuf, 0))
-                {
-                    size = strlen((char *)txBuf);
-                    // size = txBuf[LEN_IDX];
-                    ret = send(sn, txBuf, size);
-                }
-                if ((size = getSn_RX_RSR(sn)) > 0) // Don't need to check SOCKERR_BUSY because it doesn't not occur.
-                {
-                    memset(rxBuf, 0, RECV_BUF_SIZE);
-                    if (size > RECV_BUF_SIZE)
-                        size = RECV_BUF_SIZE;
-                    ret = recv(sn, rxBuf, size);
-                    xQueueSend(rawDataQueue, rxBuf, 0);
-                }
-                break;
-            case SOCK_CLOSE_WAIT:
-                ret = disconnect(sn);
-                if (ret == SOCK_OK)
-                {
-                #ifdef _DEBUG
-                    print((char *)("Socket Closed\r\n"));
-                #endif
-                }
-                break;
-            case SOCK_INIT:
-                ret = listen(sn);
-                break;
-            case SOCK_CLOSED:
-                ret = socket(sn, Sn_MR_TCP, ETH_DATA_PORT, 0x00);
-                setsockopt(sn, SO_KEEPALIVEAUTO, (void *)0); /////0
-                break;
-
-            default:
-
-                break;
-            }
-        }
-    }
 
     void ethDealTask(void *pvParameters)
     {
@@ -260,195 +173,65 @@ namespace TskEth
             // TODO 解包接收到的数据
             if (pdPASS == xQueueReceive(rawDataQueue, rxDealBuf, 0))
             {
-                if (type == BoardType::ioState)
-                {
-                    void *p = ioCmd;
-                    unpack_to_struct((char *)rxDealBuf, &p, IOCmdName, (const char *)IOCmdTypeRecord, IOCmdMemberNum);
-                    // IO write 0 亮 1 灭
-                    HAL_GPIO_WritePin(LED_0_GPIO_Port, LED_0_Pin, (GPIO_PinState)(ioCmd->state & 0x1));
-                    HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, (GPIO_PinState)((ioCmd->state & 0x2) >> 1));
-                }
-                else if (type == BoardType::steeringCurrent)
-                {
-                    void *p = steerCurCmd;
-                    unpack_to_struct((char *)rxDealBuf, &p, SteerCurName, (const char *)SteerCurTypeRecord, SteerCurMemberNum);
-                    steerCmd->state = steerCurCmd->state;
-                    steerCmd->dr1_tar_cur = (steerCurCmd->dr1_cur * current_resolution) - maxCurrent;
-                    steerCmd->dr1_tar_vel = (steerCurCmd->dr1_vel * motion_resolution) - maxVel;
-                    steerCmd->dr2_tar_pos = (steerCurCmd->dr2_pos * motion_resolution) - PI;
-                    if (pdFAIL == xQueueOverwrite(steerCmdQueue, steerCmd))
-                    {
-                        print((char *)("steerCmd send error\r\n"));
-                    }
-                }
-                else if (type > BoardType::steeringWheel)
-                {
-                    if (adsorptionCmd != nullptr)
-                    {
-                        memset(txDealBuf, 0, RECV_BUF_SIZE);
-                        memcpy(txDealBuf, rxDealBuf, strlen((char *)rxDealBuf));
-                        void *p = adsorptionCmd;
-                        unpack_to_struct((char *)txDealBuf, &p, AdsorptionCmdName, (const char *)AdsorptionCmdTypeRecord, AdsorptionCmdMemberNum);
-                        if (pdFAIL == xQueueOverwrite(adsorptionCmdQueue, adsorptionCmd))
-                        {
-                            print((char *)("adsorptionCmd send error\r\n"));
-                        }
-                    }
-                    void *p = fanCmd;
-                    unpack_to_struct((char *)rxDealBuf, &p, FanCmdName, (const char *)FanCmdTypeRecord, FanCmdMemberNum);
-                    if (pdFAIL == xQueueOverwrite(fanCmdQueue, fanCmd))
-                    {
-                        print((char *)("fanCmd send error\r\n"));
-                    }
-                }
-                else if (type == BoardType::steeringWheel)
+                if (type == BORAD_TYPE::MAIN_BOARD)
                 {
                     void *p = steerCmd;
-                    unpack_to_struct((char *)rxDealBuf, &p, SteerCmdName, (const char *)SteerCmdTypeRecord, SteerCmdMemberNum);
+                    unpack_to_struct(   (char *)rxDealBuf, &p, SteerCmdName,
+                                        (const char *)SteerCmdTypeRecord, SteerCmdMemberNum);
                     if (pdFAIL == xQueueOverwrite(steerCmdQueue, steerCmd))
                     {
                         print((char *)("steerCmd send error\r\n"));
                     }
+                }else if (type == BORAD_TYPE::PUSH_BOARD){
+
                 }
             }
 
             uint16_t cur_prefix = 0;
             // TODO 打包并发送数据
             memset(txDealBuf, 0, SEND_BUF_SIZE);
+            if (type == BORAD_TYPE::MAIN_BOARD)
             {
-                if (type == BoardType::ioState)
-                {
-                    // IO read 0 按下 1 松开
-                    io_cur_state = (io_cur_state & 0xFE) | HAL_GPIO_ReadPin(KEY_GPIO_Port, KEY_0_Pin);
-                    io_cur_state = (io_cur_state & 0xFD) | (HAL_GPIO_ReadPin(KEY_GPIO_Port, KEY_1_Pin) << 1);
-
-                    // 利用10ms周期 状态比较 去抖
-                    if (io_cur_state == io_pre_state)
-                    {
-                        ioVal->state = io_cur_state;
-                    }
-                    else
-                    {
-                        io_pre_state = io_cur_state;
-                    }
-
-                    void *p = ioVal;
-                    pack_struct(p, IOValName, (const char *)IOValTypeRecord, IOValMemberNum, 0);
-                }
-                else if (type == BoardType::steeringCurrent)
-                {
-                    xQueueReceive(steerValQueue, steerVal, 0);
-                    steerCurVal->state = steerVal->state;
-                    steerCurVal->dr1_cur = (steerVal->dr1_real_cur + maxCurrent) * current_params_coeff;
-                    steerCurVal->dr1_vel = (steerVal->dr1_real_vel + maxVel) * motion_params_coeff;
-                    steerCurVal->dr2_pos = (steerVal->dr2_real_pos + PI) * motion_params_coeff;
-                    void *p = steerCurVal;
-                    pack_struct(p, SteerCurName, (const char *)SteerCurTypeRecord, SteerCurMemberNum, 0);
-                }
-                else if (type > BoardType::steeringWheel)
-                {
-                    if (adsorptionVal != nullptr)
-                    {
-                        xQueueReceive(adsorptionValQueue, adsorptionVal, 0);
-                        void *p = adsorptionVal;
-                        // cur_prefix = pack_struct(p, AdsorptionValName, (const char *)AdsorptionValTypeRecord, AdsorptionValMemberNum, 0);
-                        // cur_prefix -= 2;
-                        // pack_struct(p, AdsorptionValName, (const char *)AdsorptionValTypeRecord, AdsorptionValMemberNum, 0);
-                        pack_struct(p, NULL, (const char *)AdsorptionValTypeRecord, AdsorptionValMemberNum, 0);
-                        cur_prefix = strlen((char *)txDealBuf);
-                    }
-                    xQueueReceive(fanValQueue, fanVal, 0);
-                    void *p = fanVal;
-                    // prefix = pack_struct(p, FanValName, (const char *)FanValTypeRecord, FanValMemberNum, cur_prefix);
-                    pack_struct(p, FanValName, (const char *)FanValTypeRecord, FanValMemberNum, cur_prefix);
-                    cur_prefix = strlen((char *)txDealBuf);
-                }
-                else if (type == BoardType::steeringWheel)
-                {
-                    xQueueReceive(steerValQueue, steerVal, 0);
-                    void *p = steerVal;
-                    // * pack_struct函数的作用是将结构体的数据打包成一个字符串格式的字节数组，以便于传输或存储。
-                    // * 输入参数： 
-                    pack_struct(p, SteerValName, (const char *)SteerValTypeRecord, SteerValMemberNum, 0);
-                }
-                // txDealBuf[LEN_IDX] = cur_prefix;
-                xQueueSend(sendDataQueue, txDealBuf, 1);
+                xQueueReceive(steerValQueue, steerVal, 0);
+                void *p = steerVal;
+                // * pack_struct函数的作用是将结构体的数据打包成一个字符串格式的字节数组，以便于传输或存储。
+                // * 输入参数： 
+                pack_struct(p, SteerValName, (const char *)SteerValTypeRecord, SteerValMemberNum, 0);
             }
+            // txDealBuf[LEN_IDX] = cur_prefix;
+            xQueueSend(sendDataQueue, txDealBuf, 1);
         }  
     }
 
     void Init()
     {
         BaseType_t rtn;
-        if (type != BoardType::idle)
+        
+        if (type == BORAD_TYPE::MAIN_BOARD)
         {
-            if (type == BoardType::activeAdsorption || type == BoardType::normalAdsorption)
-            {
-                fanCmd = (FanCmd *)pvPortMalloc(sizeof(FanCmd));
-                if (fanCmd == nullptr)
-                    return;
+            steerCmd = (SteerCmd *)pvPortMalloc(sizeof(SteerCmd));
+            if (steerCmd == nullptr)
+                return;
 
-                fanVal = (FanVal *)pvPortMalloc(sizeof(FanVal));
-                if (fanVal == nullptr)
-                    return;
+            steerVal = (SteerRunValue *)pvPortMalloc(sizeof(SteerRunValue));
+            if (steerVal == nullptr)
+                return;
 
-                fanCmdQueue = xQueueCreate(1, sizeof(FanCmd));
-                configASSERT(fanCmdQueue);
+            steerCurCmd = (SteerCurInfo *)pvPortMalloc(sizeof(SteerCurInfo));
+            if (steerCurCmd == nullptr)
+                return;
 
-                fanValQueue = xQueueCreate(1, sizeof(FanVal));
-                configASSERT(fanValQueue);
+            steerCurVal = (SteerCurInfo *)pvPortMalloc(sizeof(SteerCurInfo));
+            if (steerCurVal == nullptr)
+                return;
 
-                if (type == BoardType::activeAdsorption)
-                {
-                    adsorptionCmd = (AdsorptionCmd *)pvPortMalloc(sizeof(AdsorptionCmd));
-                    if (adsorptionCmd == nullptr)
-                        return;
-                    adsorptionVal = (AdsorptionVal *)pvPortMalloc(sizeof(AdsorptionVal));
-                    if (adsorptionVal == nullptr)
-                        return;
+            steerCmdQueue = xQueueCreate(1, sizeof(SteerCmd));
+            configASSERT(steerCmdQueue);
 
-                    adsorptionCmdQueue = xQueueCreate(1, sizeof(AdsorptionCmd));
-                    configASSERT(adsorptionCmdQueue);
-
-                    adsorptionValQueue = xQueueCreate(1, sizeof(AdsorptionVal));
-                    configASSERT(adsorptionValQueue);
-                }
-            }
-            else if (type == BoardType::steeringWheel || type == BoardType::steeringCurrent)
-            {
-                steerCmd = (SteerCmd *)pvPortMalloc(sizeof(SteerCmd));
-                if (steerCmd == nullptr)
-                    return;
-
-                steerVal = (SteerRunValue *)pvPortMalloc(sizeof(SteerRunValue));
-                if (steerVal == nullptr)
-                    return;
-
-                steerCurCmd = (SteerCurInfo *)pvPortMalloc(sizeof(SteerCurInfo));
-                if (steerCurCmd == nullptr)
-                    return;
-
-                steerCurVal = (SteerCurInfo *)pvPortMalloc(sizeof(SteerCurInfo));
-                if (steerCurVal == nullptr)
-                    return;
-
-                steerCmdQueue = xQueueCreate(1, sizeof(SteerCmd));
-                configASSERT(steerCmdQueue);
-
-                steerValQueue = xQueueCreate(1, sizeof(SteerRunValue));
-                configASSERT(steerValQueue);
-            }
-            else
-            {
-                ioCmd = (IOCmd *)pvPortMalloc(sizeof(IOCmd));
-                if (ioCmd == nullptr)
-                    return;
-
-                ioVal = (IOVal *)pvPortMalloc(sizeof(IOVal));
-                if (ioVal == nullptr)
-                    return;
-            }
+            steerValQueue = xQueueCreate(1, sizeof(SteerRunValue));
+            configASSERT(steerValQueue);
         }
+
 
         // 用于接收数据的队列
         rawDataQueue = xQueueCreate(2, RECV_BUF_SIZE);
@@ -460,10 +243,7 @@ namespace TskEth
 
         xMutex = xSemaphoreCreateMutex();
         configASSERT(xMutex != NULL);
-        // Create tasks
-        //        rtn = xTaskCreate(ethTransRecvTask, (const portCHAR *)"ethTransRecvTask",
-        //                          tskStkSize, NULL, osPriorityBelowNormal1, NULL);
-        //        configASSERT(rtn == pdPASS);
+        
         rtn = xTaskCreate(ethDealTask, (const portCHAR *)"ethDealTask",
                           tskStkSize, NULL, osPriorityBelowNormal, NULL);
         configASSERT(rtn == pdPASS);

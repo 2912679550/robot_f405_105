@@ -67,37 +67,32 @@ const float maxOmg = 1.f; // 1rad/s
 // 舵轮控制中最大角速度
 const float maxSteerOmg = PI; // 理论上最大11rad/s
 // 舵轮控制中最大电流
-const float maxCurrent = 9.5f; // M3508 C620 20A * 95%  = 19A //9.5
-// 位置控制中最大线加速度
-const float maxAcc = 1.f; // 1m/s^2
-// 位置控制中最大角加速度
-const float maxOmgAcc = 1.f; // 1rad/s^2
-// 2006控制中最大角加速度
-const float maxSteerOmgAcc = 1.f; // 1rad/s^2
+const float maxCurrent = 9.5f; // M3508 C620 20A * 95%  = 19A // M2006 9.5
 
-// 吸附单元减速比
-const float adsorptionRatio = 2e-5f; // can value (0-8191) to mm
-const float adsorptionVelRatio = 8192.f / 60.f * adsorptionRatio;
-const float xMaxAngle = 0.15f;       // rad
-const float yMaxAngle = 0.06f;       // rad
-// 吸附单元误差死区
-const float diffDeadZone = 1.5f;
+// // 吸附单元减速比
+// const float adsorptionRatio = 2e-5f; // can value (0-8191) to mm
+// const float adsorptionVelRatio = 8192.f / 60.f * adsorptionRatio;
+// const float xMaxAngle = 0.15f;       // rad
+// const float yMaxAngle = 0.06f;       // rad
+// // 吸附单元误差死区
+// const float diffDeadZone = 1.5f;
 // 吸附单元最小位移(以传感器为准)
-const float minPos = 0.01f; // mm
-// 吸附单元最大位移(以传感器为准)
-const float maxPos = 25.f; // mm
-// 吸附单元最小位移(以电机为准)
-const float minMotPos = 0.f; // mm
-// 吸附单元最大位移(以电机为准)
-const float maxMotPos = 40.f; // mm
-// 吸附单元中最大线速度
-const float adsorptionMaxVel = 3.f; // mm/s
-// 吸附单元最大电流
-const float adsorptionMaxCur = 0.8f * C610Current;
-// 吸附单元复位电流
-const float resetCurrent[3] = {1.5f, 1.5f, 1.5f};
-// 位移传感器换算系数
-const float posCoeff = 24.f / 4095.f; // mm
+// const float minPos = 0.01f; // mm
+// // 吸附单元最大位移(以传感器为准)
+// const float maxPos = 25.f; // mm
+// // 吸附单元最小位移(以电机为准)
+// const float minMotPos = 0.f; // mm
+// // 吸附单元最大位移(以电机为准)
+// const float maxMotPos = 40.f; // mm
+// // 吸附单元中最大线速度
+// const float adsorptionMaxVel = 3.f; // mm/s
+// // 吸附单元最大电流
+// const float adsorptionMaxCur = 0.8f * C610Current;
+// // 吸附单元复位电流
+// const float resetCurrent[3] = {1.5f, 1.5f, 1.5f};
+// // 位移传感器换算系数
+// const float posCoeff = 24.f / 4095.f; // mm
+
 // 电机零点条件
 const float posLow = 0.1f;
 const float posHigh = 2.f;
@@ -133,52 +128,4 @@ const float vVelPidI = 25.0f;//100.f
 const float vVelPidD = 3.0f;//4.f
 const float vVelPidIband = 2000.0f; // 0.1m/s对应2000
 
-const float fanP = 100.f;
-const float fanI = 90.f;
-const float fanIBand = 18.f;
-
-// 吸附单元PID参数
-struct PidParam
-{
-    float adPidP1[3];
-    float adPidI1[3];
-    float adPidD1[3];
-    float adPidP2[3];
-    float adPidI2[3];
-    float adPidD2[3];
-    float adPidDiffband[3];
-    float adPidValband[3];
-
-    PidParam()
-    {
-        // 吸附单元速度环
-        adPidP1[0] = 1000.f;
-        adPidP1[1] = 1000.f;
-        adPidP1[2] = 1000.f;
-        adPidI1[0] = 10000.f;
-        adPidI1[1] = 10000.f;
-        adPidI1[2] = 10000.f;
-        adPidD1[0] = 2000.f;
-        adPidD1[1] = 2000.f;
-        adPidD1[2] = 2000.f;
-
-        adPidDiffband[0] = 0.2f;
-        adPidDiffband[1] = 0.2f;
-        adPidDiffband[2] = 0.2f;
-
-        adPidP2[0] = 500.f;
-        adPidP2[1] = 500.f;
-        adPidP2[2] = 500.f;
-        adPidI2[0] = 1000.f;
-        adPidI2[1] = 1000.f;
-        adPidI2[2] = 1000.f;
-        adPidD2[0] = 100.f;
-        adPidD2[1] = 100.f;
-        adPidD2[2] = 100.f;
-
-        adPidValband[0] = 0.5f;
-        adPidValband[1] = 0.5f;
-        adPidValband[2] = 0.5f;
-    };
-};
 #endif /* PHYS_PARAMS_H_ */

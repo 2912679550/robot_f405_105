@@ -1,8 +1,8 @@
 /*
- * ethernet_tsk.h
- *
+ *  ethernet_tsk.h
+ *  
  *  Created on: Aug 1, 2014
- *      Author: loywong
+ *  Author: loywong
  */
 
 #ifndef ETHERNET_TSK_H_
@@ -54,7 +54,7 @@ const char FanValTypeRecord[6] = {1, 2, 2, 2, 2, 3};
 const char FanValMemberNum = 6;
 
 /*
- * Steer cmd val
+ *  Steer cmd val
  */
 const char SteerCmdName[5][13] = {"steer_state", "dr1_tar_v", "dr2_tar_p", "dr1_tar_i", "ts"};
 // 1-uint32_t; 2-float；3-uint64_t

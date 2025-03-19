@@ -12,42 +12,6 @@ namespace TskSteer
     moto_measure_t *motor = nullptr;
     uint32_t steerCnt = 0;
 
-    // linear velocity (m/s) to motor rotate speed (rpm) 
-    inline float dr1_vel2rpm(const float vel)
-    {
-        return vel * ratio * toRPM / wheelR;
-    }
-    //  motor rotate speed (rpm) to linear velocity (m/s)
-    inline float dr1_rpm2vel(int16_t rpm)
-    {
-        return ((float)rpm) * wheelR / ratio / toRPM;
-    }
-    // motor angle to distance (m)
-    inline float dr1_ang2dis(int32_t total_angle)
-    {
-        return ((float)total_angle) / 8192.0f / ratio * 2.f * PI * wheelR;
-    }
-
-    // motor angle to wheel angle (rad)
-    inline float dr2_angConvert(int32_t total_angle)
-    {
-        return ((float)total_angle) / 8192.0f / ratio2 * 2.f * PI;
-    }
-    // motor rotate speed (rpm) to wheel rotate speed (rad/s)
-    inline float dr2_rpmConvert(int16_t rpm)
-    {
-        return ((float)rpm) / ratio2 / toRPM;
-    }
-    inline float saturate(float v, float max, float min)
-    {
-        return v > max ? max : v < min ? min
-                                       : v;
-    }
-    inline float cacul_ppi_angle(const float tar, const float cur)
-    {
-        return (tar - cur < -PI) ? (tar - cur + 2 * PI) : (tar - cur > PI) ? (tar - cur - 2 * PI)
-                                                                           : (tar - cur);
-    }
 
     void steerTask(void *pvParameters)
     {
@@ -91,6 +55,7 @@ namespace TskSteer
 
             steerCnt++;
             // update motor info
+            // * 接收电机状态数据
             if (pdPASS == xQueueReceive(can1RxQueueHandle, motor, 0))
             {
                 if (motor->id == 0)
@@ -108,7 +73,7 @@ namespace TskSteer
 
             // update motor control command
             xQueueReceive(TskEth::steerCmdQueue, steerCmd, 0);
-
+            // * 更新控制目标
             // 5ms更新一次电机指令（控制频率200Hz）
             if (steerCnt % motorTick == 0)
             {
