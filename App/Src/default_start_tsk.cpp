@@ -282,10 +282,10 @@ void StartDefaultTask(void *argument)
         Error_Handler();
     xSemaphoreGive(fanTickSem);
 
-    motionTickSem = xSemaphoreCreateBinary();
-    if (motionTickSem == NULL)
+    mainAssistTickSem = xSemaphoreCreateBinary();
+    if (mainAssistTickSem == NULL)
         Error_Handler();
-    xSemaphoreGive(motionTickSem);
+    xSemaphoreGive(mainAssistTickSem);
 
     dbgQueue = xQueueCreate(5, CMD_BUF_SIZE);
 

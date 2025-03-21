@@ -9,7 +9,7 @@
 #define PHYSPARAMS_H_
 
 #define VERSION "V_1"
-
+// ! 宏操作符
 #define RAD2DEG(x) ((x) * (180.0f / 3.1415926f))
 #define ABSF(x) ((x) < 0.0f ? -(x) : (x))
 #define ABSI(x) ((x) < 0 ? -(x) : (x))
@@ -17,7 +17,8 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
 //================  system parameters
-// 固定参数，一般不修改
+// ! 固定参数，一般不修改
+const float PI = 3.14159265358979323846f;
 // rad/s转换到rpm
 const float toRPM = 9.55f;
 // 系统控制周期
@@ -25,19 +26,6 @@ const float Ts = 0.001f;
 // 电机控制周期
 const float motorTs = 0.005f;
 const int motorTick = 5; //(motorTs / Ts);
-//
-// 风机控制周期
-const float fanTs = 0.02f;
-const int fanTick = (fanTs / Ts);
-// 风机升余弦给定
-const float fanStep = 10.f;
-const float PI = 3.1415926536f;
-const float PI_2 = (PI / 2.f);
-// 负压测量
-const float barometerCoeff = 40.f / 4.0f;
-const float adcResolution = 3.3f / 4095.f;
-const float barometerOffset = 2.25f;
-
 // CAN角度转换
 const float canAngle = 8192.f / 360.f; //   0  ~ 8191 ->  0  ~ 360    将角度转换为圈
 // CAN电流量程
@@ -46,86 +34,73 @@ const float C610Current = 10000.f;       // M2006 C610 -10000~10000 -> -10 ~ 10A
 const float C620ICoeff = 20.f / 16384.f; // M3508 C620 -16384~16384 -> -20 ~ 20A
 const float C610ICoeff = 10.f / 10000.f; // M2006 C610 -10000~10000 -> -10 ~ 10A
 
-// 根据实际情况修改参数
+// ! 车轮本身参数,根据实际情况修改参数
 // 车轮半径
-const float wheelR = 0.05f;
+const float wheelR[2] = {0.05f , 0.05f}; // 0.05m
 // 驱动电机减速比
-const float ratio = 36.0f * 12.0f;//19.0f * 2.7551
-// 驱动电机减速比
-const float ratio2 = 36.f * 5.2941f;
-
-//舵轮电流模式参数分辨率
-const float motion_resolution = 0.0001f;
-const short motion_params_coeff = 10000;
-const float current_resolution = 0.001f;
-const short current_params_coeff = 1000;
+const float wheelRatio[2] = {}; // 从电机转子rpm到车轮rpm       19.0f * 2.7551
+const float steerRatio[2] = {}; // 从电机转子rpm到舵向rpm       19.0f * 2.7551
 
 // 位置控制中最大线速度
 const float maxVel = 0.5f; // 0.3m/s
 // 位置控制中最大角速度
 const float maxOmg = 1.f; // 1rad/s
-// 舵轮控制中最大角速度
-const float maxSteerOmg = PI; // 理论上最大11rad/s
 // 舵轮控制中最大电流
 const float maxCurrent = 9.5f; // M3508 C620 20A * 95%  = 19A // M2006 9.5
 
-// // 吸附单元减速比
-// const float adsorptionRatio = 2e-5f; // can value (0-8191) to mm
-// const float adsorptionVelRatio = 8192.f / 60.f * adsorptionRatio;
-// const float xMaxAngle = 0.15f;       // rad
-// const float yMaxAngle = 0.06f;       // rad
-// // 吸附单元误差死区
-// const float diffDeadZone = 1.5f;
-// 吸附单元最小位移(以传感器为准)
-// const float minPos = 0.01f; // mm
-// // 吸附单元最大位移(以传感器为准)
-// const float maxPos = 25.f; // mm
-// // 吸附单元最小位移(以电机为准)
-// const float minMotPos = 0.f; // mm
-// // 吸附单元最大位移(以电机为准)
-// const float maxMotPos = 40.f; // mm
-// // 吸附单元中最大线速度
-// const float adsorptionMaxVel = 3.f; // mm/s
-// // 吸附单元最大电流
-// const float adsorptionMaxCur = 0.8f * C610Current;
-// // 吸附单元复位电流
-// const float resetCurrent[3] = {1.5f, 1.5f, 1.5f};
-// // 位移传感器换算系数
-// const float posCoeff = 24.f / 4095.f; // mm
-
-// 电机零点条件
-const float posLow = 0.1f;
-const float posHigh = 2.f;
-
-// 电机位置信息
-const float motor_x[3] = {-100.68f, 0.f, 100.68f}; // mm
-const float motor_y[3] = {-58.87f, 78.f, -58.87f};
-// idx0 - idx1, idx1 - idx2，用于计算平面表达式
-const float motor_delta_x[2] = {-100.68f, -100.68f};
-const float motor_delta_y[2] = {-136.87f, 136.87f};
-// 位移传感器位置信息s
-const float sensor_x[3] = {-105.f, 105.f, 31.6f}; // mm
-const float sensor_y[3] = {35.f, 35.f, -40.76f};  // mm
-// idx0 - idx1, idx1 - idx2，用于计算平面表达式
-const float sensor_delta_x[2] = {-210.f, 73.4f};
-const float sensor_delta_y[2] = {0.f, 75.76f};
-
 //================ end of system
 
-// 舵轮转向位置环
-const float thPosPidP = 10.f;
-const float thPosPidI = 10.f;
-const float thPosPidD = 0.f;
-const float thPosPidIband = PI / 10.f;
-// 舵轮转向速度环
-const float thVelPidP = 2000.f;
-const float thVelPidI = 15000.f;
-const float thVelPidD = 5000.0f;
-const float thVelPidIband = 1.f;
-// 舵轮转速速度环
-const float vVelPidP = 2.5f;
-const float vVelPidI = 25.0f;//100.f
-const float vVelPidD = 3.0f;//4.f
-const float vVelPidIband = 2000.0f; // 0.1m/s对应2000
+// ! 舵轮控制PID参数
+// * 舵轮转向位置环
+const float thPosPidP[2] = 
+    {10.f, 10.f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+const float thPosPidI[2] = 
+    {10.f, 10.f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+const float thPosPidD[2] = 
+    {0.f, 0.f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+const float thPosPidIband[2] = 
+    {PI / 10.f, PI / 10.f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+// 舵轮控制中最大角速度
+const float maxSteerOmg = PI; // 理论上最大11rad/s
+
+// * 舵轮转向速度环
+const float thVelPidP[2] = 
+    {2000.f, 2000.f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+const float thVelPidI[2] = 
+    {15000.f, 15000.f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+const float thVelPidD[2] = 
+    {5000.0f, 5000.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+const float thVelPidIband[2] = 
+    {1.f, 1.f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+
+// * 舵轮转速速度环
+const float vVelPidP[2] = 
+    {2.5f, 2.5f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+const float vVelPidI[2] = 
+    {25.0f, 25.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+const float vVelPidD[2] = 
+    {3.0f, 3.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+const float vVelPidIband[2] = 
+    {2000.0f, 2000.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+
+// ! 机构执行电机参数
+// * 机构电机位置环
+const float mechPosPidP[2] = 
+    {0.f, 10.f}; // 为主控板时，控制的是顶端丝杠，为辅助板时，控制的是一臂与二臂夹角
+const float mechPosPidI[2] = 
+    {0.f, 0.f}; // 为主控板时，控制的是顶端丝杠，为辅助板时，控制的是一臂与二臂夹角
+// const float mechPosPidD[2] = 
+//     {0.f, 0.f}; // 为主控板时，控制的是顶端丝杠，为辅助板时，控制的是一臂与二臂夹角
+const float mechPosPidIband[2] = 
+    {0.f, 0.f}; 
+// * 机构电机速度环
+const float mechVelPidP[2] = 
+    {0.f, 0.f}; 
+const float mechVelPidI[2] = 
+    {0.f, 0.f};
+const float mechVelPidD[2] = 
+    {0.f, 0.f};
+const float mechVelPidIband[2] = 
+    {0.f, 0.f};
 
 #endif /* PHYS_PARAMS_H_ */

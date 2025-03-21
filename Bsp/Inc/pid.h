@@ -7,14 +7,6 @@ typedef struct{
     float outMin, outMax;           // 输出限幅
 } PID_PARAM;
 
-typedef enum
-{
-    PID_MODE_IDLE,
-    PID_MODE_POSITION,
-    PID_MODE_VELOCITY,
-    PID_MODE_TORQUE,
-}PID_MODE;
-
 #ifdef __cplusplus
 
 class Pid

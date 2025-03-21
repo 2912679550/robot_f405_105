@@ -21,7 +21,9 @@
         "holdgrip.h": "c",
         "turnarrow.h": "c",
         "can.h": "c",
-        "zy_visualscope.h": "c"
+        "zy_visualscope.h": "c",
+        "main.h": "c",
+        "pid.h": "c"
     },
     "cmake.sourceDirectory": "V:/Master/Engineering_Projects/105/code/robot_f405-newest/Drivers/CMSIS/DSP/Source/SupportFunctions"
 }

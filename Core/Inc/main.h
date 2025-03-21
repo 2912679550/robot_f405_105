@@ -73,14 +73,41 @@ extern "C"
         float dr1_tar_cur;  // -19~19 , A
         float dr1_real_cur; //
         // dr2 是舵轮的转向电机，跑速度环和位置环
-        float dr2_tar_pos;  // -pi~pi , rad
-        float dr2_real_pos; // -pi~pi , rad
-        float dr2_tar_vel;  // -pi~pi , rad/s
+        float dr2_tar_pos;  // 
+        float dr2_real_pos; // 
+        float dr2_tar_vel;  // 
         float dr2_real_vel; //
         float dr2_tar_cur;  // -9.5~9.5 , A
         float dr2_real_cur; //
         uint64_t timestamp; // us
     } SteerRunValue;
+
+    typedef struct{
+        uint32_t state;
+        float dr1_tar_vel;  //
+        float dr2_tar_pos;  // 
+        float dr3_tar_angle; // 
+        float dr3_tar_tight; // 0~2, 0:stop 1:left 2:right
+    } MAIN_ASSIST_CMD;
+
+    typedef struct
+    {
+        uint32_t state; // 
+        // dr1 是舵轮的轮电机，只跑速度环
+        float dr1_tar_vel;  // 
+        float dr1_real_vel; //
+        // dr2 是舵轮的转向电机，跑速度环和位置环
+        float dr2_tar_vel;  // 
+        float dr2_real_vel; //
+        float dr2_tar_pos;  // 
+        float dr2_real_pos; // 
+        // 主丝杠夹紧状态，主丝杠目前夹紧值（1左2右）
+        float dr3_tar_angle;    // 辅助控制板时，为期望的二臂角度
+        float dr3_real_angle;
+        float dr3_tar_spring;   // 主控制板时，为期望的弹簧长度
+        float real_spring1;     // 实际的弹簧长度，1左2右
+        float real_spring2; // 0~2, 0:stop 1:left 2:right
+    } MAIN_ASSIST_VAL;
 
     // * 主驱动轮与辅助驱动轮控制板的机构电机
     // typedef struct
@@ -176,7 +203,7 @@ extern "C"
     extern UART_HandleTypeDef huart1;
     extern CAN_HandleTypeDef hcan1;
     extern SemaphoreHandle_t ethDealTickSem, ethTxTickSem;
-    extern SemaphoreHandle_t motionTickSem, fanTickSem;
+    extern SemaphoreHandle_t mainAssistTickSem, fanTickSem;
     extern QueueHandle_t can1RxQueueHandle;
     extern QueueHandle_t dbgQueue;
     extern uint8_t ethPeriod; // ms

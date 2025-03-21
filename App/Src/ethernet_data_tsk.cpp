@@ -147,13 +147,12 @@ namespace TskEth
 {
     const int tskStkSize = 512; // 512
     uint8_t type = BORAD_TYPE::idle;
-    SteerCmd *steerCmd = nullptr;
-    SteerRunValue *steerVal = nullptr;
-    SteerCurInfo *steerCurCmd = nullptr;
-    SteerCurInfo *steerCurVal = nullptr;
 
-    QueueHandle_t steerCmdQueue;    // 用于缓存板子接收到的数据
-    QueueHandle_t steerValQueue;    // 用于缓存板子向上位机发送的数据
+    MAIN_ASSIST_CMD *mainAssistCmd = nullptr; // 用于控制辅助驱动轮的命令
+    MAIN_ASSIST_VAL *mainAssistVal = nullptr; // 用于反馈辅助驱动轮的状态
+
+    QueueHandle_t mainAssistCmdQueue; // 用于缓存解包好的主驱动轮和辅助驱动轮控制指令
+    QueueHandle_t mainAssistValQueue; // 用于缓存等待打包的主驱动轮和辅助驱动轮反馈值
 
     QueueHandle_t rawDataQueue;
     QueueHandle_t sendDataQueue;
@@ -175,10 +174,10 @@ namespace TskEth
             {
                 if (type == BORAD_TYPE::MAIN_BOARD)
                 {
-                    void *p = steerCmd;
-                    unpack_to_struct(   (char *)rxDealBuf, &p, SteerCmdName,
-                                        (const char *)SteerCmdTypeRecord, SteerCmdMemberNum);
-                    if (pdFAIL == xQueueOverwrite(steerCmdQueue, steerCmd))
+                    void *p = mainAssistCmd;
+                    unpack_to_struct(   (char *)rxDealBuf, &p, MAIN_ASSIST_CMD_NAME,
+                                        (const char *)MAIN_ASSIST_CMD_TYPE_RECORD, MAIN_ASSIST_CMD_MEMBER_NUM);
+                    if (pdFAIL == xQueueOverwrite(mainAssistCmdQueue, mainAssistCmd))
                     {
                         print((char *)("steerCmd send error\r\n"));
                     }
@@ -192,11 +191,11 @@ namespace TskEth
             memset(txDealBuf, 0, SEND_BUF_SIZE);
             if (type == BORAD_TYPE::MAIN_BOARD)
             {
-                xQueueReceive(steerValQueue, steerVal, 0);
-                void *p = steerVal;
+                xQueueReceive(mainAssistValQueue, mainAssistVal, 0);
+                void *p = mainAssistVal;
                 // * pack_struct函数的作用是将结构体的数据打包成一个字符串格式的字节数组，以便于传输或存储。
                 // * 输入参数： 
-                pack_struct(p, SteerValName, (const char *)SteerValTypeRecord, SteerValMemberNum, 0);
+                pack_struct(p, MAIN_ASSIST_VAL_NAME, (const char *)MAIN_ASSIST_VAL_TYPE_RECORD, MAIN_ASSIST_VAL_MEMBER_NUM, 0);
             }
             // txDealBuf[LEN_IDX] = cur_prefix;
             xQueueSend(sendDataQueue, txDealBuf, 1);
@@ -209,27 +208,19 @@ namespace TskEth
         
         if (type == BORAD_TYPE::MAIN_BOARD)
         {
-            steerCmd = (SteerCmd *)pvPortMalloc(sizeof(SteerCmd));
-            if (steerCmd == nullptr)
+            mainAssistCmd = (MAIN_ASSIST_CMD *)pvPortMalloc(sizeof(MAIN_ASSIST_CMD));
+            if (mainAssistCmd == nullptr)
+                return;
+            
+            mainAssistVal = (MAIN_ASSIST_VAL *)pvPortMalloc(sizeof(MAIN_ASSIST_VAL));
+            if (mainAssistVal == nullptr)
                 return;
 
-            steerVal = (SteerRunValue *)pvPortMalloc(sizeof(SteerRunValue));
-            if (steerVal == nullptr)
-                return;
+            mainAssistCmdQueue = xQueueCreate(1, sizeof(MAIN_ASSIST_CMD));
+            configASSERT(mainAssistCmdQueue);
 
-            steerCurCmd = (SteerCurInfo *)pvPortMalloc(sizeof(SteerCurInfo));
-            if (steerCurCmd == nullptr)
-                return;
-
-            steerCurVal = (SteerCurInfo *)pvPortMalloc(sizeof(SteerCurInfo));
-            if (steerCurVal == nullptr)
-                return;
-
-            steerCmdQueue = xQueueCreate(1, sizeof(SteerCmd));
-            configASSERT(steerCmdQueue);
-
-            steerValQueue = xQueueCreate(1, sizeof(SteerRunValue));
-            configASSERT(steerValQueue);
+            mainAssistValQueue = xQueueCreate(1, sizeof(MAIN_ASSIST_VAL));
+            configASSERT(mainAssistValQueue);
         }
 
 

@@ -90,6 +90,23 @@ ffPid::ffPid(float p, float i, float wc, float ts, float outIMin, float outIMax,
     this->tar_dot = 0;
 }
 
+ffPid::ffPid(FFPID_PARAM *param){
+    this->p = param->p;
+    this->i = param->i;
+    this->wc = param->wc;
+    this->ts = param->ts;
+    this->accI = .0f;
+    this->accIMin = param->outIMin;
+    this->accIMax = param->outIMax;
+    this->Iband = param->Iband; // integral separated
+    this->outMax = param->outMax;
+    this->outMin = param->outMin;
+    this->pre_tar = 0;
+    this->pre_tar_dot_filtered = 0;
+    this->tar_dot = 0;
+}
+
+
 void ffPid::Reset()
 {
     this->accI = .0f;

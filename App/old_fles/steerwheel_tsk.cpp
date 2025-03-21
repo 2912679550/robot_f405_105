@@ -50,7 +50,7 @@ namespace TskSteer
         {
             // 在每次循环开始都会尝试获取motionTickSem信号量，当没有这个信号量时会阻塞在这里
             // 信号像需要再其他地方被重新Give
-            rtn = xSemaphoreTake(motionTickSem, 2);
+            rtn = xSemaphoreTake(mainAssistTickSem, 2);
             configASSERT(rtn);
 
             steerCnt++;
@@ -131,7 +131,7 @@ namespace TskSteer
                     steerVal->state = steerState::STOP;
                 }
             }
-            
+            // todo 打包can帧数据
             if (steerCmd->state == steerState::TORQUE)
             {
                 steerVal->state = steerCmd->state;

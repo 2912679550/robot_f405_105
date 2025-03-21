@@ -1,31 +1,31 @@
 #include "public_func.h"
 
 // linear velocity (m/s) to motor rotate speed (rpm) 
-inline float dr1_vel2rpm(const float vel)
-{
-    return vel * ratio * toRPM / wheelR;
-}
+// // inline float dr1_vel2rpm(const float vel)
+// // {
+// //     return vel * ratio * toRPM / wheelR;
+// // }
 //  motor rotate speed (rpm) to linear velocity (m/s)
-inline float dr1_rpm2vel(int16_t rpm)
-{
-    return ((float)rpm) * wheelR / ratio / toRPM;
-}
+// //inline float dr1_rpm2vel(int16_t rpm)
+// //{
+// //    return ((float)rpm) * wheelR / ratio / toRPM;
+// //}
 // motor angle to distance (m)
-inline float dr1_ang2dis(int32_t total_angle)
-{
-    return ((float)total_angle) / 8192.0f / ratio * 2.f * PI * wheelR;
-}
+// //inline float dr1_ang2dis(int32_t total_angle)
+// //{
+// //    return ((float)total_angle) / 8192.0f / ratio * 2.f * PI * wheelR;
+// //}
 
 // motor angle to wheel angle (rad)
-inline float dr2_angConvert(int32_t total_angle)
-{
-    return ((float)total_angle) / 8192.0f / ratio2 * 2.f * PI;
-}
+// // inline float dr2_angConvert(int32_t total_angle)
+// // {
+// //     return ((float)total_angle) / 8192.0f / ratio2 * 2.f * PI;
+// // }
 // motor rotate speed (rpm) to wheel rotate speed (rad/s)
-inline float dr2_rpmConvert(int16_t rpm)
-{
-    return ((float)rpm) / ratio2 / toRPM;
-}
+// // inline float dr2_rpmConvert(int16_t rpm)
+// // {
+// //     return ((float)rpm) / ratio2 / toRPM;
+// // }
 inline float saturate(float v, float max, float min)
 {
     return v > max ? max : v < min ? min

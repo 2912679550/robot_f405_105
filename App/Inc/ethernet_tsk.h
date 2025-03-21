@@ -41,17 +41,26 @@ typedef enum
 } cmdType;
 
 /*
- * Fan cmd val
- */
-const char FanCmdName[3][13] = {"fan_state", "fan_tar_pre", "fan_ts"};
-// 1-uint32_t; 2-float；3-uint64_t
-const char FanCmdTypeRecord[3] = {1, 2, 3};
-const char FanCmdMemberNum = 3;
+* main and assist board cmd val
+*/
+// 依次为： 舵轮运行状态，舵轮目标速度(dr1)，舵轮目标位置(dr2),是否启用主丝杠夹紧(main,dr3),一臂二臂目标夹角(assist，dr3)
+const char MAIN_ASSIST_CMD_NAME[5][13] = {"state", "tar_v", "tar_p", "tar_angle", "tar_spring"};
+const char MAIN_ASSIST_CMD_TYPE_RECORD[5] = {1, 2, 2, 2, 2};
+const char MAIN_ASSIST_CMD_MEMBER_NUM = 5;
 
-const char FanValName[6][13] = {"fan_state", "fan_tar_pre", "fan_real_pre", "fan_pwm", "fan_speed", "fan_ts"};
-// 1-uint32_t; 2-float；3-uint64_t
-const char FanValTypeRecord[6] = {1, 2, 2, 2, 2, 3};
-const char FanValMemberNum = 6;
+// * main and assist board back cal
+// 依次为：舵轮运行状态，   舵轮目标速度(dr1)，舵轮实际速度(dr1)
+//                        舵轮目标位置(dr2)，舵轮实际位置(dr2)
+//                        两臂目标夹角，两臂实际夹角
+//                        主丝杠目标夹紧状态，主丝杠目前夹紧值（1左2右）
+const char MAIN_ASSIST_VAL_NAME[12][13] = { "state", 
+                                            "tar1_v", "real1_v", 
+                                            "tar2_v", "real2_v",
+                                            "tar_p", "real_p", 
+                                            "tar_angle","real_angle",
+                                            "tar_spring", "real_spring1","real_spring2"};
+const char MAIN_ASSIST_VAL_TYPE_RECORD[12] = {1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+const char MAIN_ASSIST_VAL_MEMBER_NUM = 12;
 
 /*
  *  Steer cmd val
@@ -67,47 +76,6 @@ const char SteerValName[12][13] = {"steer_state", "dr1_tar_v", "dr1_real_v", "dr
 const char SteerValTypeRecord[12] = {1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3};
 const char SteerValMemberNum = 12;
 
-/*
- * Adsorption cmd val
- */
-const char AdsorptionCmdName[8][13] = {
-    "active_state", "s1_tar_p", "s2_tar_p", "s3_tar_p",
-    "plate_tar_x", "plate_tar_y", "plate_tar_z", "active_ts"};
-// 1-uint32_t; 2-float；3-uint64_t
-const char AdsorptionCmdTypeRecord[8] = {1, 2, 2, 2, 2, 2, 2, 3};
-const char AdsorptionCmdMemberNum = 8;
-
-const char AdsorptionValName[17][13] = {
-    "active_state", "s1_tar_p", "s2_tar_p", "s3_tar_p",
-    "s1_real_p", "s2_real_p", "s3_real_p", "dr1_real_p",
-    "dr2_real_p", "dr3_real_p", "plate_tar_x", "plate_tar_y",
-    "plate_tar_z", "plate_real_x", "plate_real_y", "plate_real_z", "active_ts"};
-// 1-uint32_t; 2-float；3-uint64_t
-const char AdsorptionValTypeRecord[17] = {1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3};
-const char AdsorptionValMemberNum = 16;
-
-/*
- * IO cmd val
- */
-const char IOCmdName[2][13] = {"io_state", "ts"};
-// 1-uint32_t; 2-float；3-uint64_t
-const char IOCmdTypeRecord[2] = {1, 3};
-const char IOCmdMemberNum = 2;
-
-const char IOValName[2][13] = {"io_state", "ts"};
-// 1-uint32_t; 2-float；3-uint64_t
-const char IOValTypeRecord[2] = {1, 3};
-const char IOValMemberNum = 2;
-
-
-/*
- * steer current cmd val
- */
-const char SteerCurName[3][13] = {"sc1", "sc2", "ts"};
-// 1-uint32_t; 2-float；3-uint64_t
-const char SteerCurTypeRecord[3] = {1, 1, 3};
-const char SteerCurMemberNum = 3;
-
 typedef struct
 {
     uint64_t ethTs;
@@ -117,15 +85,15 @@ typedef struct
 namespace TskEth
 {
     extern uint8_t type;
-    extern QueueHandle_t steerCmdQueue;
-    extern QueueHandle_t steerValQueue;
-    extern QueueHandle_t fanCmdQueue;
-    extern QueueHandle_t fanValQueue;
-    extern QueueHandle_t adsorptionCmdQueue;
-    extern QueueHandle_t adsorptionValQueue;
+    // extern QueueHandle_t steerCmdQueue;
+    // extern QueueHandle_t steerValQueue;
+
+    extern QueueHandle_t mainAssistCmdQueue; // 用于缓存解包好的主驱动轮和辅助驱动轮控制指令
+    extern QueueHandle_t mainAssistValQueue; // 用于缓存等待打包的主驱动轮和辅助驱动轮反馈值
+
  
-    extern QueueHandle_t  rawDataQueue;
-    extern QueueHandle_t  sendDataQueue;
+    extern QueueHandle_t  rawDataQueue;     // 网络接收到，等待解包的数据流
+    extern QueueHandle_t  sendDataQueue;    // 已经打包好，等待网络发送的数据流
     void Init();
 };
 
