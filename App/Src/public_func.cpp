@@ -22,16 +22,16 @@
 // //     return ((float)total_angle) / 8192.0f / ratio2 * 2.f * PI;
 // // }
 // motor rotate speed (rpm) to wheel rotate speed (rad/s)
-// // inline float dr2_rpmConvert(int16_t rpm)
-// // {
-// //     return ((float)rpm) / ratio2 / toRPM;
-// // }
-inline float saturate(float v, float max, float min)
+// inline float dr2_rpmConvert(int16_t rpm)
+// {
+//     return ((float)rpm) / ratio2 / toRPM;
+// }
+float saturate(float v, float max, float min)
 {
     return v > max ? max : v < min ? min
                                    : v;
 }
-inline float cacul_ppi_angle(const float tar, const float cur)
+float cacul_ppi_angle(const float tar, const float cur)
 {
     return (tar - cur < -PI) ? (tar - cur + 2 * PI) : (tar - cur > PI) ? (tar - cur - 2 * PI)
                                                                        : (tar - cur);

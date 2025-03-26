@@ -875,7 +875,7 @@
       <GroupNumber>7</GroupNumber>
       <FileNumber>47</FileNumber>
       <FileType>8</FileType>
-      <tvExp>0</tvExp>
+      <tvExp>1</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
       <PathWithFileName>..\App\Src\public_func.cpp</PathWithFileName>
@@ -910,12 +910,12 @@
     <File>
       <GroupNumber>7</GroupNumber>
       <FileNumber>50</FileNumber>
-      <FileType>1</FileType>
+      <FileType>8</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\App\Src\motor.c</PathWithFileName>
-      <FilenameWithoutPath>motor.c</FilenameWithoutPath>
+      <PathWithFileName>..\App\Src\motor.cpp</PathWithFileName>
+      <FilenameWithoutPath>motor.cpp</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

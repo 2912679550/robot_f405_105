@@ -27,8 +27,8 @@ extern "C"
 // // inline float dr2_angConvert(int32_t total_angle);
 // motor rotate speed (rpm) to wheel rotate speed (rad/s)
 // // inline float dr2_rpmConvert(int16_t rpm);
-inline float saturate(float v, float max, float min);
-inline float cacul_ppi_angle(const float tar, const float cur);
+float saturate(float v, float max, float min);
+float cacul_ppi_angle(const float tar, const float cur);
 
 #endif /* __cplusplus */
 

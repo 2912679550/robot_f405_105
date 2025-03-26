@@ -34,6 +34,8 @@ namespace TskSteerBoard
     void Init();
     // 根据不同的板子类型装载不同的电机控制参数
     void load_params_();
+    // 配置电机的机械参数
+    void load_motor_params_();
     // 根据不同的板子类型，更新设置GPIO引脚
     void io_config_();
     void main_assist_board_task(void *pvParameters);

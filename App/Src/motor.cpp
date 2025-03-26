@@ -8,12 +8,12 @@ void MOTOR::initMotorPid(PID_PARAM *speedPidParam, FFPID_PARAM *posPidParam){
     if(speedPidParam != nullptr) speed_pid = new Pid(speedPidParam);
 }
 
-inline void MOTOR::resetPosPid(){
+void MOTOR::resetPosPid(){
     if(pos_pid != nullptr) pos_pid->Reset();
 }
 
 
-inline void MOTOR::resetVelPid(){
+void MOTOR::resetVelPid(){
     if(speed_pid != nullptr) speed_pid->Reset();
 }
 
