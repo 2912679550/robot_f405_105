@@ -23,6 +23,12 @@ namespace TskSteerBoard
     // * 信息容器
     moto_measure_t *motor_ = nullptr;
     BORAD_TYPE boradType_ = BORAD_TYPE::idle; // 控制板类型(这个任务中只会设置为主驱动轮或辅助驱动轮)
+    // 用于存储ADC采样值，结合main文件中对ADC通道的配置：
+    // PC0：ADC1_IN10  rank 1
+    // PC1：ADC1_IN11  rank 2
+    // PC2：ADC1_IN12  rank 3
+    uint16_t adcVal[2] = {0}; 
+    float adcRealVal[2] = {0}; // 用于存储经过变换后得到的ADC采样值，这时就已经与实际值对应了
 
     uint32_t steerCnt = 0;
     // 判断是主驱动轮控制板还是辅助驱动轮控制板
@@ -177,10 +183,10 @@ namespace TskSteerBoard
             configASSERT(rtn);
             steerCnt++;
 
-            // * 接收电机状态数据
+            // * 接收电机与传感器状态数据
             if (pdPASS == xQueueReceive(can1RxQueueHandle, motor_, 0) && motor_ -> id < 3)
                 usedMotors[motor_->id].unpackCanData(motor_);   // 此时已经将can帧的消息解包到电机类中
-
+            HAL_ADC_Start_DMA(&hadc1 , (uint32_t *)adcVal, 2); // 启动ADC采样，读取电压值
             
             // 控制信息接收，boardCmd_中包含了舵轮的目标速度和位置以及主控制板的夹紧状态和辅助控制板的夹角
             xQueueReceive(TskEth::mainAssistCmdQueue, boardCmd_, 0);
@@ -278,19 +284,46 @@ namespace TskSteerBoard
 
             // ! 在这里插入第三个机构电机的控制代码
             // * 首先从传感器获取测量值
-
+            for (int i = 0; i < 3 - boradType_; i++){
+                // 主控制板（枚举值为1）有两个传感器，3-1=2
+                // 辅助控制板（枚举值为2）有一个传感器，3-2=1
+                // 只解析有效的传感器数据
+                adcRealVal[i] = float(adcVal[i]) * adcCoeff[i] + adcOffset[i];
+            }
+            // 生成机构电机PID当前值与目标值
+            if(boradType_ == BORAD_TYPE::MAIN_BOARD){
+                usedMotors[2].pos_current = (adcRealVal[0] + adcRealVal[1]) / 2;
+                usedMotors[2].pos_tar = boardCmd_->dr3_tar_tight;
+            }else if(boradType_ == BORAD_TYPE::ASSIST_BOARD){
+                usedMotors[2].pos_current = adcRealVal[0];
+                usedMotors[2].pos_tar = boardCmd_->dr3_tar_angle;
+            }
+            
             // ! 机构电机控制结束
 
             // todo 发送can控制帧、存储反馈值，并判断是否发送
             CAN_SendMsg(CAN_Moto_ALL_ID, curCmd);
-            boardVal_->dr1_real_vel = usedMotors[0].vel_current;
-            boardVal_->dr1_tar_vel = usedMotors[0].vel_tar;
-            boardVal_->dr2_real_pos = usedMotors[1].pos_current;
-            boardVal_->dr2_tar_pos = usedMotors[1].pos_tar;
-            boardVal_->dr2_real_vel = usedMotors[1].vel_current;
-            boardVal_->dr2_tar_vel = usedMotors[1].vel_tar;
-            boardVal_->dr3_real_angle = usedMotors[2].pos_current;
-            boardVal_->dr3_tar_angle = usedMotors[2].pos_tar;
+            // boardVal_->dr1_real_vel = usedMotors[0].vel_current;
+            // boardVal_->dr1_tar_vel  = usedMotors[0].vel_tar;
+            // boardVal_->dr2_real_pos = usedMotors[1].pos_current;
+            // boardVal_->dr2_tar_pos  = usedMotors[1].pos_tar;
+            // boardVal_->dr2_real_vel = usedMotors[1].vel_current;
+            // boardVal_->dr2_tar_vel  = usedMotors[1].vel_tar;
+            // boardVal_->dr3_real_angle = usedMotors[2].pos_current;
+            // boardVal_->dr3_tar_angle = usedMotors[2].pos_tar;
+            // 为了测试发送缺省值
+            boardVal_->state = boardCmd_->state;
+            boardVal_->dr1_tar_vel  = 1.f;
+            boardVal_->dr1_real_vel = 2.f;
+            boardVal_->dr2_tar_vel  = 3.f;
+            boardVal_->dr2_real_vel = 4.f;
+            boardVal_->dr2_tar_pos  = 5.f;
+            boardVal_->dr2_real_pos = 6.f;
+            boardVal_->dr3_tar_angle = 7.f;
+            boardVal_->dr3_real_angle = 8.f;
+            boardVal_->dr3_tar_spring = 9.f;
+            boardVal_->real_spring1 = 10.f;
+            boardVal_->real_spring2 = 11.f;
             if(steerCnt % ethPeriod == 0)
             {
                 // * 每隔ethPeriod个周期将舵轮的状态信息发送到以太网

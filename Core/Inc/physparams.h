@@ -103,4 +103,7 @@ const float mechVelPidD[2] =
 const float mechVelPidIband[2] = 
     {0.f, 0.f};
 
+// ! ADC采样传感器到实际数据的转换系数
+const float adcCoeff[2] = {0.001f, 0.001f}; // 0.001V/ADC
+const float adcOffset[2] = {0.f, 0.f}; // 0.001V/ADC
 #endif /* PHYS_PARAMS_H_ */

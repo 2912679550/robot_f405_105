@@ -58,7 +58,7 @@ const char MAIN_ASSIST_VAL_NAME[12][13] = { "state",
                                             "tar2_v", "real2_v",
                                             "tar_p", "real_p", 
                                             "tar_angle","real_angle",
-                                            "tar_spring", "real_spring1","real_spring2"};
+                                            "tar_spring", "real_s1","real_s2"};
 const char MAIN_ASSIST_VAL_TYPE_RECORD[12] = {1, 
                                             2, 2,
                                             2, 2, 
