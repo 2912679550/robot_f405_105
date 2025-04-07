@@ -1,7 +1,7 @@
 #include "motor.h"
 #include "physparams.h"
 
-MOTOR usedMotors[3]; // 0:dr1 1:dr2 2:dr3
+MOTOR usedMotors[MOTOR_NUM]; // 0:dr1 1:dr2 2:dr3
 
 void MOTOR::initMotorPid(PID_PARAM *speedPidParam, FFPID_PARAM *posPidParam){
     if(posPidParam != nullptr)  pos_pid = new ffPid(posPidParam);
@@ -17,7 +17,9 @@ void MOTOR::resetVelPid(){
     if(speed_pid != nullptr) speed_pid->Reset();
 }
 
+
 float MOTOR::pidTick(PID_MODE mode, float delta){
+    static int block_cnt = 0; // 堵转计数器
     float out2can = 0.f;
     ctrl_mode = mode;
     float deltaV = delta; 
@@ -31,16 +33,75 @@ float MOTOR::pidTick(PID_MODE mode, float delta){
 
     if(mode >= PID_MODE::PID_MODE_POSITION){
         out2can = speed_pid->Tick(deltaV); // 这里的out是对应电机电调的电流数据格式
-        cur_tar = out2can * can2cur; // 这里的out是对应电机电调的电流数据格式
+        cur_tar = out2can * can2cur; // 转换回以A为单位的真是电流值存储起来
     }
+
+    // 堵转电流计数
+    if(cur_tar > block_cur){
+        block_cnt++;
+        if(block_cnt > block_max){
+            work_log = WORKING_LOG::BLOCK;
+            block_cnt = 0;
+        }
+    }else{
+        block_cnt = 0;
+        work_log = WORKING_LOG::NORMAL;
+    }
+
     return out2can;
 }
 
 void MOTOR::unpackCanData(moto_measure_t *motorData){
     if(motorData == nullptr) return;
-    pos_current = motorData->total_angle * can2pos; // 这里的total_angle是电调返回的直接值，大疆使用了0~8191来表示0~360度，所以数值最后还需要乘一个2pi/8192
-    vel_current = motorData->speed_rpm * can2vel; // 将电机rpm转换为轮子的线速度 , uint = m/s
-    cur_current = motorData->given_current * can2cur;
+    if(cali_flag == false){
+        pos_current = motorData->total_angle * can2pos; // 这里的total_angle是电调返回的直接值，大疆使用了0~8191来表示0~360度，所以数值最后还需要乘一个2pi/8192
+        vel_current = motorData->speed_rpm * can2vel; // 将电机rpm转换为轮子的线速度 , uint = m/s
+        cur_current = motorData->given_current * can2cur;
+    }else
+    {
+        pos_current = motorData->total_angle * can2pos + offset_angle; 
+        vel_current = motorData->speed_rpm * can2vel; // 将电机rpm转换为轮子的线速度 , uint = m/s
+        cur_current = motorData->given_current * can2cur;
+    }
+}
+
+void MOTOR::set_tar(PID_MODE mode, float tar){
+    ctrl_mode = mode;
+    switch(mode){
+        case PID_MODE::PID_MODE_POSITION:
+            pos_tar = tar;
+            break;
+        case PID_MODE::PID_MODE_VELOCITY:
+            vel_tar = tar;
+            break;
+        case PID_MODE::PID_MODE_TORQUE:
+            cur_tar = tar;
+            break;
+        default:
+            break;
+    }
+}
+
+void MOTOR::set_delta(PID_MODE mode, float delta){
+    ctrl_mode = mode;
+    switch(mode){
+        case PID_MODE::PID_MODE_POSITION:
+            pos_current += delta;
+            break;
+        case PID_MODE::PID_MODE_VELOCITY:
+            vel_current += delta;
+            break;
+        case PID_MODE::PID_MODE_TORQUE:
+            cur_current += delta;
+            break;
+        default:
+            break;
+    }
+}
+
+void MOTOR::set_cali_val(float offset){
+    offset_angle = offset;
+    cali_flag = true;
 }
 
 

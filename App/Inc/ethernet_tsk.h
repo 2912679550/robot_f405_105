@@ -44,7 +44,9 @@ typedef enum
 * main and assist board cmd val
 */
 // 依次为： 舵轮运行状态，舵轮目标速度(dr1)，舵轮目标位置(dr2),是否启用主丝杠夹紧(main,dr3),一臂二臂目标夹角(assist，dr3)
-const char MAIN_ASSIST_CMD_NAME[5][13] = {"state", "tar_v", "tar_p", "tar_angle", "tar_spring"};
+const char MAIN_ASSIST_CMD_NAME[5][13] = {"state", 
+                                        "tar_v", "tar_p", 
+                                        "tar_angle", "tar_spring"};
 const char MAIN_ASSIST_CMD_TYPE_RECORD[5] = {1, 2, 2, 2, 2};
 const char MAIN_ASSIST_CMD_MEMBER_NUM = 5;
 

@@ -134,6 +134,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
         {
             i = hCAN1_RxHeader.StdId - CAN_Moto1_ID;
             moto_chassis[i].id = i;
+            // 前50帧数据为偏置值
             moto_chassis[i].msg_cnt++ <= 50 ? get_moto_offset(&moto_chassis[i], aRxData) : get_moto_measure(&moto_chassis[i], aRxData);
             // 接收到触发信息，M2006角度复位
             if (pdTRUE == xQueueReceiveFromISR(reset_flag, (void *)&flag, 0))

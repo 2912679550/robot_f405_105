@@ -1,12 +1,16 @@
-#ifndef __MAIN_ASSIST_BORAD_H_
-#define __MAIN_ASSIST_BORAD_H_
+// Author: Vulcan
+// Date: 2025.0407
+// Description: 用于电机自动控制与PID计算的线程任务头文件声明
+
+#ifndef MOTOR_TSK_H_
+#define MOTOR_TSK_H_
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 #include "main.h"
-
+#include "motor.h"
 #ifdef __cplusplus
 }
 #endif
@@ -17,22 +21,17 @@ extern "C"
 #include "feedForwardPid.h"
 #include "physparams.h"
 #include "public_func.h"
+#include "main.h"
 
-namespace TskSteerBoard
-{
-    typedef enum
-    {
-        STOP,       // 0 停止
-        NORMAL,     // 1 正常
-        TORQUE,     // 2 扭矩
-        RESET,      // 3 复位
-    } steerState;
-
+namespace TskMotorPID{
     extern BORAD_TYPE boradType_ ; // 控制板类型(这个任务中只会设置为主驱动轮或辅助驱动轮)
     extern int TCP_IP_ID; // 配置的IP地址的末尾，表示板子的序号，用于后续读取不同的传感器参数值
     void Init();
-    void main_assist_board_task(void *pvParameters);
-}; 
+    void motorTickTask(void *pvParameters);
+    void load_params_(); // 读取参数
+    void load_motor_params_(); // 装载电机类的机械参数
+}
 
-#endif /* __cplusplus */
-#endif /* __MAIN_ASSIST_BORAD_H_ */
+#endif // __cplusplus
+
+#endif  /* MOTOR_TSK_H_ */

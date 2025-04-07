@@ -106,4 +106,12 @@ const float mechVelPidIband[2] =
 // ! ADC采样传感器到实际数据的转换系数
 const float adcCoeff[2] = {0.001f, 0.001f}; // 0.001V/ADC
 const float adcOffset[2] = {0.f, 0.f}; // 0.001V/ADC
+
+// ! 用于标定舵轮角度值
+// 注意在motor类中解析时是将这个值加在了电机的原始值上，需要注意正负符号
+const float caliAngel_sensor[6] = {
+    0.f, 0.f, 0.f, 0.f, 0.f, 0.f}; // 由激光传感器测得的标定原点
+const float caliAngle_mech[6] = {
+    0.5 * PI, 0.5 * PI, 0.5 * PI, 0.5 * PI, 0.5 * PI, 0.5 * PI}; // 由机械式方法（电机堵转）测得的标定原点
+
 #endif /* PHYS_PARAMS_H_ */

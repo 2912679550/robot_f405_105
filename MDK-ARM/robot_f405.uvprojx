@@ -664,6 +664,11 @@
               <FileType>8</FileType>
               <FilePath>..\App\Src\motor.cpp</FilePath>
             </File>
+            <File>
+              <FileName>motor_tsk.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\App\Src\motor_tsk.cpp</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

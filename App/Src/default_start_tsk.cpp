@@ -2,6 +2,7 @@
 #include "w5500_dev.h"
 #include "ethernet_tsk.h"
 #include "main_assist_board_tsk.h"
+#include "motor_tsk.h"
 #include "push_board_tsk.h"
 #include "cmd_tsk.h"
 #include <string.h>
@@ -287,6 +288,11 @@ void StartDefaultTask(void *argument)
         Error_Handler();
     xSemaphoreGive(mainAssistTickSem);
 
+    motorTickSem = xSemaphoreCreateBinary();
+    if (motorTickSem == NULL)
+        Error_Handler();
+    xSemaphoreGive(motorTickSem);
+
     dbgQueue = xQueueCreate(5, CMD_BUF_SIZE);
 
     wiz_NetInfo defaultEthInfo, cmdEthInfo;
@@ -362,16 +368,26 @@ void StartDefaultTask(void *argument)
             if (cmdEthInfo.type == BORAD_TYPE::MAIN_BOARD)
             {
                 TskSteerBoard::boradType_ = BORAD_TYPE::MAIN_BOARD;
+                TskSteerBoard::TCP_IP_ID = cmdEthInfo.ip[3] - 201;
                 TskSteerBoard::Init();
+                // * 创建舵轮电机控制任务
+                TskMotorPID::boradType_ = BORAD_TYPE::MAIN_BOARD;
+                TskMotorPID::TCP_IP_ID = cmdEthInfo.ip[3] - 201;
+                TskMotorPID::Init();
             }
             else if(cmdEthInfo.type == BORAD_TYPE::ASSIST_BOARD){
                 TskSteerBoard::boradType_ = BORAD_TYPE::ASSIST_BOARD;
+                TskSteerBoard::TCP_IP_ID = cmdEthInfo.ip[3] - 201;
                 TskSteerBoard::Init();
+
+                // * 创建舵轮电机控制任务
+                TskMotorPID::boradType_ = BORAD_TYPE::ASSIST_BOARD;
+                TskMotorPID::TCP_IP_ID = cmdEthInfo.ip[3] - 201;
+                TskMotorPID::Init();
             }
             else if(cmdEthInfo.type == BORAD_TYPE::PUSH_BOARD){
                 TskPushBoard::Init();
             }
-
             // check task to ethernet 5001 recv task, DO NOT deal uart cmd!
             res = 0xF;  // 完成网络通信初始化与配置，开始接收数据
         }

@@ -204,6 +204,7 @@ extern "C"
     extern CAN_HandleTypeDef hcan1;
     extern SemaphoreHandle_t ethDealTickSem, ethTxTickSem;
     extern SemaphoreHandle_t mainAssistTickSem, fanTickSem;
+    extern SemaphoreHandle_t motorTickSem;
     extern QueueHandle_t can1RxQueueHandle;
     extern QueueHandle_t dbgQueue;
     extern uint8_t ethPeriod; // ms
