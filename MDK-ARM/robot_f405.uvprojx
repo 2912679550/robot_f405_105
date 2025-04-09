@@ -669,6 +669,11 @@
               <FileType>8</FileType>
               <FilePath>..\App\Src\motor_tsk.cpp</FilePath>
             </File>
+            <File>
+              <FileName>adcSensor.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\App\Src\adcSensor.cpp</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

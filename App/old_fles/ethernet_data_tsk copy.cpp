@@ -288,7 +288,7 @@ namespace TskEth
                 // //         print((char *)("fanCmd send error\r\n"));
                 // //     }
                 // // }
-                if (type == BORAD_TYPE::MAIN_BOARD)
+                if (type == BORAD_TYPE::MAIN_BOARD || type == BORAD_TYPE::ASSIST_BOARD)
                 {
                     void *p = steerCmd;
                     unpack_to_struct(   (char *)rxDealBuf, &p, SteerCmdName,
@@ -353,7 +353,7 @@ namespace TskEth
                 // //     pack_struct(p, FanValName, (const char *)FanValTypeRecord, FanValMemberNum, cur_prefix);
                 // //     cur_prefix = strlen((char *)txDealBuf);
                 // // }
-                if (type == BORAD_TYPE::MAIN_BOARD)
+                if (type == BORAD_TYPE::MAIN_BOARD || type == BORAD_TYPE::ASSIST_BOARD)
                 {
                     xQueueReceive(steerValQueue, steerVal, 0);
                     void *p = steerVal;
@@ -371,7 +371,7 @@ namespace TskEth
     {
         BaseType_t rtn;
         
-        if (type == BORAD_TYPE::MAIN_BOARD)
+        if (type == BORAD_TYPE::MAIN_BOARD  || type == BORAD_TYPE::ASSIST_BOARD)
         {
             steerCmd = (SteerCmd *)pvPortMalloc(sizeof(SteerCmd));
             if (steerCmd == nullptr)

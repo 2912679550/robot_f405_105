@@ -211,7 +211,7 @@ extern "C"
 
     extern void eprint(char *str);
 // #define _DEBUG
-#define CMD_TIMEOUT 5 * 1000 // 5s
+#define CMD_TIMEOUT 1 * 1000 // 5s
 #define TASK_LOG_NUM 400
 
 #define KEY_0_Pin GPIO_PIN_0

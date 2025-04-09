@@ -2,6 +2,9 @@
 #include "ethernet_tsk.h"
 #include "math.h"
 #include "motor.h"
+#include "adcSensor.h"
+
+uint16_t aaa[3] = {0};
 
 namespace TskSteerBoard
 {
@@ -14,12 +17,6 @@ namespace TskSteerBoard
     // * 信息容器
     BORAD_TYPE boradType_ = BORAD_TYPE::idle; // 控制板类型(这个任务中只会设置为主驱动轮或辅助驱动轮)
     int TCP_IP_ID = 0;
-    // 用于存储ADC采样值，结合main文件中对ADC通道的配置：
-    // PC0：ADC1_IN10  rank 1
-    // PC1：ADC1_IN11  rank 2
-    // PC2：ADC1_IN12  rank 3
-    uint16_t adcVal[2] = {0}; 
-    float adcRealVal[2] = {0}; // 用于存储经过变换后得到的ADC采样值，这时就已经与实际值对应了
 
     uint32_t steerCnt = 0;
     // 判断是主驱动轮控制板还是辅助驱动轮控制板
@@ -35,6 +32,17 @@ namespace TskSteerBoard
         boardVal_ = (MAIN_ASSIST_VAL *)pvPortMalloc(sizeof(MAIN_ASSIST_VAL));
         if (boardVal_ == nullptr)
             return;
+        if(boradType_ == BORAD_TYPE::ASSIST_BOARD){
+            // TCP_IP_ID : 0 对应 0 
+            // TCP_IP_ID : 1 对应 1
+            // TCP_IP_ID : 3 对应 2
+            // TCP_IP_ID : 4 对应 3
+            int index = TCP_IP_ID > 1 ? TCP_IP_ID - 1 : TCP_IP_ID;
+            adcSensor = new ANGLE_SENSOR(&hadc1, adc_angle_coeff[index], adc_angle_offset[index]);
+            if (adcSensor == nullptr)
+                return;
+        }
+
         // Create tasks
         rtn = xTaskCreate(main_assist_board_task, (const portCHAR *)"steerTask",
                           tskStkSize, NULL, osPriorityAboveNormal, NULL);
@@ -57,16 +65,22 @@ namespace TskSteerBoard
             vTaskDelay(tskPeriod); // 5ms
             steerCnt++;
 
-            // * 接收电机与传感器状态数据
-            HAL_ADC_Start_DMA(&hadc1 , (uint32_t *)adcVal, 2); // 启动ADC采样，读取电压值
-            
-            // 控制信息接收，boardCmd_中包含了舵轮的目标速度和位置以及主控制板的夹紧状态和辅助控制板的夹角
+            // * 接收控制指令            
+            // boardCmd_中包含了舵轮的目标速度和位置以及主控制板的夹紧状态和辅助控制板的夹角
             xQueueReceive(TskEth::mainAssistCmdQueue, boardCmd_, 0);
             // * 限定电机控制信息的更新频率，每5ms更新一次
             if(steerCnt % motorTick == 0)
             {
                 // 接收到了重置信息，但当前舵轮的状态不是复位
-                if( boardCmd_->state == steerState::RESET && boardVal_->state != steerState::RESET)
+                if(boardCmd_->state == steerState::STOP && boardVal_->state == steerState::STOP)
+                {
+                    // // 上电状态，失能所有电机
+                    // usedMotors[0].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 轮电机失能
+                    // usedMotors[1].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 舵电机失能
+                    // usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 夹紧电机失能
+                    boardVal_->state = steerState::STOP; // 停止状态
+                }
+                else if( boardCmd_->state == steerState::RESET && boardVal_->state != steerState::RESET)
                 {
                     boardVal_->state = steerState::STOP;
                     usedMotors[0].set_tar(PID_MODE::PID_MODE_VELOCITY, 0.f); // 轮电机锁死
@@ -124,20 +138,22 @@ namespace TskSteerBoard
 
             // ! 在这里插入第三个机构电机的控制代码
             // * 首先从传感器获取测量值
-            for (int i = 0; i < 3 - boradType_; i++){
-                // 主控制板（枚举值为1）有两个传感器，3-1=2
-                // 辅助控制板（枚举值为2）有一个传感器，3-2=1
-                // 只解析有效的传感器数据
-                adcRealVal[i] = float(adcVal[i]) * adcCoeff[i] + adcOffset[i];
-            }
-            // 生成机构电机PID当前值与目标值
-            if(boradType_ == BORAD_TYPE::MAIN_BOARD){
-                usedMotors[2].pos_current = (adcRealVal[0] + adcRealVal[1]) / 2;
-                usedMotors[2].pos_tar = boardCmd_->dr3_tar_tight;
-            }else if(boradType_ == BORAD_TYPE::ASSIST_BOARD){
-                usedMotors[2].pos_current = adcRealVal[0];
-                usedMotors[2].pos_tar = boardCmd_->dr3_tar_angle;
-            }
+            adcSensor->getSensorVal();
+            // HAL_ADC_Start_DMA(&hadc1, (uint32_t *)aaa, 3); // 启动ADC转换
+            // for (int i = 0; i < 3 - boradType_; i++){
+            //     // 主控制板（枚举值为1）有两个传感器，3-1=2
+            //     // 辅助控制板（枚举值为2）有一个传感器，3-2=1
+            //     // 只解析有效的传感器数据
+            //     adcRealVal[i] = float(adcVal[i]) * adcCoeff[i] + adcOffset[i];
+            // }
+            // // 生成机构电机PID当前值与目标值
+            // if(boradType_ == BORAD_TYPE::MAIN_BOARD){
+            //     usedMotors[2].pos_current = (adcRealVal[0] + adcRealVal[1]) / 2;
+            //     usedMotors[2].pos_tar = boardCmd_->dr3_tar_tight;
+            // }else if(boradType_ == BORAD_TYPE::ASSIST_BOARD){
+            //     usedMotors[2].pos_current = adcRealVal[0];
+            //     usedMotors[2].pos_tar = boardCmd_->dr3_tar_angle;
+            // }
             
             // ! 机构电机控制结束
             // todo 发送can控制帧、存储反馈值，并判断是否发送

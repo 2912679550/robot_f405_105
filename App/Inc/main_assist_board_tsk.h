@@ -29,6 +29,10 @@ namespace TskSteerBoard
     } steerState;
 
     extern BORAD_TYPE boradType_ ; // 控制板类型(这个任务中只会设置为主驱动轮或辅助驱动轮)
+    // TCP_IP_ID : 0 对应 0 
+    // TCP_IP_ID : 1 对应 1
+    // TCP_IP_ID : 3 对应 2
+    // TCP_IP_ID : 4 对应 3
     extern int TCP_IP_ID; // 配置的IP地址的末尾，表示板子的序号，用于后续读取不同的传感器参数值
     void Init();
     void main_assist_board_task(void *pvParameters);

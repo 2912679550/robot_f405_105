@@ -15,7 +15,7 @@ namespace TskMotorPID
 
     // * 结构参数
     float wheelRatio_ = 0.f;    // 轮电机电机的减速比
-    float steerRatio_ = 0.f;    // 转向电机的减速比
+    float steerRatio_ = 0.f;    // 舵电电机的减速比
     float wheelR_ = 0.f;        // 舵轮轮胎半径
 
     // * 信息容器
@@ -96,7 +96,7 @@ namespace TskMotorPID
                     curCmd[i * 2 + 1] = (int)tar_i & 0xFF; // 低8位
             }
             // if(motorCnt % motorTick != 0) continue; // 限定电机控制的周期
-            // CAN_SendMsg(CAN_Moto_ALL_ID, curCmd);
+            CAN_SendMsg(CAN_Moto_ALL_ID, curCmd);
         }
     }
 

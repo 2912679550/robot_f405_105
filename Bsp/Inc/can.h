@@ -55,7 +55,7 @@ extern "C"
     uint8_t id;
     // record data
     uint16_t last_angle; // abs angle range:[0,8191]
-    uint16_t offset_angle;
+    uint16_t offset_angle ;
     int32_t round_cnt;
     int32_t total_angle;
     uint32_t msg_cnt;
