@@ -288,7 +288,7 @@ namespace TskEth
                 // //         print((char *)("fanCmd send error\r\n"));
                 // //     }
                 // // }
-                if (type == BORAD_TYPE::MAIN_BOARD)
+                if (type == BORAD_TYPE::MAIN_BOARD || type == BORAD_TYPE::ASSIST_BOARD)
                 {
                     void *p = steerCmd;
                     unpack_to_struct(   (char *)rxDealBuf, &p, SteerCmdName,

@@ -172,7 +172,7 @@ namespace TskEth
             // TODO 解包接收到的数据
             if (pdPASS == xQueueReceive(rawDataQueue, rxDealBuf, 0))
             {
-                if (type == BORAD_TYPE::MAIN_BOARD)
+                if (type == BORAD_TYPE::MAIN_BOARD || type == BORAD_TYPE::ASSIST_BOARD)
                 {
                     void *p = mainAssistCmd;
                     unpack_to_struct(   (char *)rxDealBuf, &p, MAIN_ASSIST_CMD_NAME,
@@ -189,7 +189,7 @@ namespace TskEth
             uint16_t cur_prefix = 0;
             // TODO 打包并发送数据
             memset(txDealBuf, 0, SEND_BUF_SIZE);
-            if (type == BORAD_TYPE::MAIN_BOARD)
+            if (type == BORAD_TYPE::MAIN_BOARD || type == BORAD_TYPE::ASSIST_BOARD)
             {
                 xQueueReceive(mainAssistValQueue, mainAssistVal, 0);
                 void *p = mainAssistVal;
@@ -206,7 +206,7 @@ namespace TskEth
     {
         BaseType_t rtn;
         
-        if (type == BORAD_TYPE::MAIN_BOARD)
+        if (type == BORAD_TYPE::MAIN_BOARD || type == BORAD_TYPE::ASSIST_BOARD)
         {
             mainAssistCmd = (MAIN_ASSIST_CMD *)pvPortMalloc(sizeof(MAIN_ASSIST_CMD));
             if (mainAssistCmd == nullptr)

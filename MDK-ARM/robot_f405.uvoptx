@@ -162,6 +162,22 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
+          <LineNumber>166</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134254186</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>..\App\Src\main_assist_board_tsk.cpp</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\robot_f405\../App/Src/main_assist_board_tsk.cpp\166</Expression>
+        </Bp>
+        <Bp>
+          <Number>1</Number>
+          <Type>0</Type>
           <LineNumber>95</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>134245128</Address>
@@ -174,6 +190,38 @@
           <Filename>../Core/Src/stm32f4xx_it.c</Filename>
           <ExecCommand></ExecCommand>
           <Expression>\\robot_f405\../Core/Src/stm32f4xx_it.c\95</Expression>
+        </Bp>
+        <Bp>
+          <Number>2</Number>
+          <Type>0</Type>
+          <LineNumber>182</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134254356</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>..\App\Src\main_assist_board_tsk.cpp</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\robot_f405\../App/Src/main_assist_board_tsk.cpp\182</Expression>
+        </Bp>
+        <Bp>
+          <Number>3</Number>
+          <Type>0</Type>
+          <LineNumber>351</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134252130</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>..\App\Src\default_start_tsk.cpp</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\robot_f405\../App/Src/default_start_tsk.cpp\351</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>

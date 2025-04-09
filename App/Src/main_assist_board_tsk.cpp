@@ -302,7 +302,7 @@ namespace TskSteerBoard
             // ! 机构电机控制结束
 
             // todo 发送can控制帧、存储反馈值，并判断是否发送
-            CAN_SendMsg(CAN_Moto_ALL_ID, curCmd);
+            // CAN_SendMsg(CAN_Moto_ALL_ID, curCmd);
             // boardVal_->dr1_real_vel = usedMotors[0].vel_current;
             // boardVal_->dr1_tar_vel  = usedMotors[0].vel_tar;
             // boardVal_->dr2_real_pos = usedMotors[1].pos_current;
