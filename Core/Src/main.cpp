@@ -70,6 +70,7 @@ const osThreadAttr_t defaultTask_attributes = {
 };
 /* USER CODE BEGIN PV */
 uint8_t ethPeriod = 5; // ms
+uint8_t motorCanTick = 4; // ms
 SemaphoreHandle_t ethDealTickSem, ethTxTickSem;
 SemaphoreHandle_t mainAssistTickSem, fanTickSem;
 SemaphoreHandle_t motorTickSem;
@@ -790,16 +791,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       xSemaphoreGiveFromISR(mainAssistTickSem, &pxHigherPriorityTaskWoken);
       portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);
     }
-    if (fanTickSem != NULL)
-    {
-      xSemaphoreGiveFromISR(fanTickSem, &pxHigherPriorityTaskWoken);
-      portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);
-    }
-
     if (motorTickSem != NULL)
     {
-      xSemaphoreGiveFromISR(motorTickSem, &pxHigherPriorityTaskWoken);
-      portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);
+        if(cnt % motorCanTick == 0 ){
+            xSemaphoreGiveFromISR(motorTickSem, &pxHigherPriorityTaskWoken);
+            portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);
+        }
     }
   }
 

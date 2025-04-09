@@ -206,7 +206,7 @@ namespace TskEth
     {
         BaseType_t rtn;
         
-        if (type == BORAD_TYPE::MAIN_BOARD)
+        if (type == BORAD_TYPE::MAIN_BOARD || type == BORAD_TYPE::ASSIST_BOARD)
         {
             mainAssistCmd = (MAIN_ASSIST_CMD *)pvPortMalloc(sizeof(MAIN_ASSIST_CMD));
             if (mainAssistCmd == nullptr)

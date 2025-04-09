@@ -278,11 +278,6 @@ void StartDefaultTask(void *argument)
         Error_Handler();
     xSemaphoreGive(ethTxTickSem);
 
-    fanTickSem = xSemaphoreCreateBinary();
-    if (fanTickSem == NULL)
-        Error_Handler();
-    xSemaphoreGive(fanTickSem);
-
     mainAssistTickSem = xSemaphoreCreateBinary();
     if (mainAssistTickSem == NULL)
         Error_Handler();

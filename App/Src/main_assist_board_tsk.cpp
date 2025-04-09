@@ -7,6 +7,7 @@ namespace TskSteerBoard
 {
     const int tskStkSize = 512;
     // * 控制指令
+    uint8_t tskPeriod = 5; // ms
     MAIN_ASSIST_CMD *boardCmd_ = nullptr; // 用于控制辅助驱动轮的命令
     MAIN_ASSIST_VAL *boardVal_ = nullptr; // 用于反馈辅助驱动轮的状态
 
@@ -51,8 +52,9 @@ namespace TskSteerBoard
         // * 控制机构电机需要的量（暂无）
         while(true)
         {
-            rtn = xSemaphoreTake(mainAssistTickSem, 2);
-            configASSERT(rtn);
+            // rtn = xSemaphoreTake(mainAssistTickSem, 2);
+            // configASSERT(rtn);
+            vTaskDelay(tskPeriod); // 5ms
             steerCnt++;
 
             // * 接收电机与传感器状态数据

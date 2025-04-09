@@ -4,6 +4,7 @@
 namespace TskMotorPID
 {
     const int tskStkSize = 512;
+    uint8_t tskPeriod = 2; // ms
 
     // * PID参数
     PID_PARAM* dr1VelPID_ = nullptr;      // 舵轮轮电机，跑速度环
@@ -41,23 +42,24 @@ namespace TskMotorPID
     void motorTickTask(void *pvParameters)
     {
         BaseType_t rtn;
-        can1RxQueueHandle = xQueueCreate(4, sizeof(moto_measure_t));
+        can1RxQueueHandle = xQueueCreate(6, sizeof(moto_measure_t));
         // 初始化can并使能中断
         CAN_Start_Trans();
         uint8_t curCmd[8] = {0};
         // 上电时电流均给0
-        CAN_SendMsg(CAN_Moto_ALL_ID, curCmd);
+        // CAN_SendMsg(CAN_Moto_ALL_ID, curCmd);
 
         while(true){
-            rtn = xSemaphoreTake(motorTickSem, 2);
-            configASSERT(rtn);
+            vTaskDelay(tskPeriod); // 
+            // rtn = xSemaphoreTake(motorTickSem, 2);
+            // configASSERT(rtn);
             motorCnt++;
 
             // * 接收电机数据
             if (pdPASS == xQueueReceive(can1RxQueueHandle, motor_, 0) && motor_ -> id < MOTOR_NUM)
                 usedMotors[motor_->id].unpackCanData(motor_);   // 此时已经将can帧的消息解包到电机类中
             
-            // if(motorCnt % motorTick != 0) continue; // 限定电机控制的周期
+            
             // 清空can帧缓存区
             memset(curCmd, 0, sizeof(curCmd));
             float delta_p = 0.f;
@@ -89,12 +91,12 @@ namespace TskMotorPID
                         usedMotors[i].cur_tar = 0.f;
                         tar_i = 0.f;
                         break;
-                }
-                curCmd[i * 2] = (int)tar_i >> 8; // 高8位
-                curCmd[i * 2 + 1] = (int)tar_i & 0xFF; // 低8位
-                usedMotors[i].pidTick(PID_MODE::PID_MODE_VELOCITY, 0.f); // 更新电机当前的速度值
+                    }
+                    curCmd[i * 2] = (int)tar_i >> 8; // 高8位
+                    curCmd[i * 2 + 1] = (int)tar_i & 0xFF; // 低8位
             }
-            CAN_SendMsg(CAN_Moto_ALL_ID, curCmd);
+            // if(motorCnt % motorTick != 0) continue; // 限定电机控制的周期
+            // CAN_SendMsg(CAN_Moto_ALL_ID, curCmd);
         }
     }
 

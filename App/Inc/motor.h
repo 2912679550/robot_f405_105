@@ -36,8 +36,8 @@ typedef enum
 class MOTOR
 {
 public:
-    PID_MODE ctrl_mode; // 0:stop 1:pos 2:vel 3:torque
-    WORKING_LOG work_log; // 电机工作状态
+    PID_MODE ctrl_mode = PID_MODE::PID_MODE_IDLE ; // 0:stop 1:pos 2:vel 3:torque
+    WORKING_LOG work_log = WORKING_LOG::NORMAL; // 电机工作状态
 
     float pos_tar;      // 目标位置
     float vel_tar;      // 目标速度
