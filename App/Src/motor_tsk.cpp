@@ -147,11 +147,7 @@ namespace TskMotorPID
         dr2VelPID_->Iband = thVelPidIband[index];
         dr2VelPID_->outMin = -0.95f * C610Current;
         dr2VelPID_->outMax = 0.95f * C610Current;
-
-        // * 装载到电机类中
-        usedMotors[0].initMotorPid(dr1VelPID_, nullptr); // dr1 速度环
-        usedMotors[1].initMotorPid(dr2VelPID_, dr2PosPID_); // dr2 速度环和位置环
-    
+        
         // TODO 主控板的机构电机只跑速度环，辅助驱动轮的机构电机跑位置环和速度环
         // 配置公用速度环参数
         dr3VelPID_ = (PID_PARAM *)pvPortMalloc(sizeof(PID_PARAM));
@@ -172,17 +168,21 @@ namespace TskMotorPID
             dr3PosPID_->i = mechPosPidI[index];
             dr3PosPID_->wc = 50;
             dr3PosPID_->ts = motorTs;
-            dr3PosPID_->outIMin = -maxSteerOmg / 5;
-            dr3PosPID_->outIMax = maxSteerOmg / 5;
+            dr3PosPID_->outIMin = -maxScrewOmg / 5;
+            dr3PosPID_->outIMax = maxScrewOmg / 5;
             dr3PosPID_->Iband = mechPosPidIband[index];
-            dr3PosPID_->outMin = -maxSteerOmg;
-            dr3PosPID_->outMax = maxSteerOmg;
+            dr3PosPID_->outMin = -maxScrewOmg;
+            dr3PosPID_->outMax = maxScrewOmg;
+            
+            usedMotors[2].outer_pos = true; // 机构电机使用外部传感器的测量值作为位置值
         }
-
+        
         // * 装载到电机类中
+        usedMotors[0].initMotorPid(dr1VelPID_, nullptr); // dr1 速度环
+        usedMotors[1].initMotorPid(dr2VelPID_, dr2PosPID_); // dr2 速度环和位置环
         usedMotors[2].initMotorPid(dr3VelPID_, dr3PosPID_); // dr3 速度环和位置环
     }
-
+    
     void load_motor_params_(){
         usedMotors[0].can2cur = C610ICoeff; // dr1 轮电机
         usedMotors[0].can2vel = wheelR_ / wheelRatio_ / toRPM; // dr1 轮电机,表示的是轮子的线速度
@@ -194,7 +194,7 @@ namespace TskMotorPID
 
         // * 暂时保留
         usedMotors[2].can2cur = C610ICoeff; // dr3 机构电机
-        usedMotors[2].can2vel = 1; // dr3 机构电机，单位为rad/s
+        usedMotors[2].can2vel = 1/ toRPM / M2006_RATIO; // dr3 机构电机，单位为rad/s
         usedMotors[2].can2pos = 0; // dr3 机构电机,单位为rad
     }
 

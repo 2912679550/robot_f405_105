@@ -19,7 +19,6 @@ void MOTOR::resetVelPid(){
 
 
 float MOTOR::pidTick(PID_MODE mode, float delta){
-    static int block_cnt = 0; // 堵转计数器
     float out2can = 0.f;
     ctrl_mode = mode;
     float deltaV = delta; 
@@ -37,7 +36,7 @@ float MOTOR::pidTick(PID_MODE mode, float delta){
     }
 
     // 堵转电流计数
-    if(cur_tar > block_cur){
+    if(abs(cur_tar) > block_cur && abs(vel_current) < 0.05f){
         block_cnt++;
         if(block_cnt > block_max){
             work_log = WORKING_LOG::BLOCK;
@@ -54,14 +53,14 @@ float MOTOR::pidTick(PID_MODE mode, float delta){
 void MOTOR::unpackCanData(moto_measure_t *motorData){
     if(motorData == nullptr) return;
     if(cali_flag == false){
-        pos_current = motorData->total_angle * can2pos; // 这里的total_angle是电调返回的直接值，大疆使用了0~8191来表示0~360度，所以数值最后还需要乘一个2pi/8192
-        vel_current = motorData->speed_rpm * can2vel; // 将电机rpm转换为轮子的线速度 , uint = m/s
-        cur_current = motorData->given_current * can2cur;
+        if(outer_pos == false)pos_current = motorData->total_angle * can2pos * mech_dir; // 这里的total_angle是电调返回的直接值，大疆使用了0~8191来表示0~360度，所以数值最后还需要乘一个2pi/8192
+        if(outer_vel == false)vel_current = motorData->speed_rpm * can2vel * mech_dir; // 将电机rpm转换为轮子的线速度 , uint = m/s
+        cur_current = motorData->given_current * can2cur * mech_dir;
     }else
     {
-        pos_current = motorData->total_angle * can2pos + offset_angle; 
-        vel_current = motorData->speed_rpm * can2vel; // 将电机rpm转换为轮子的线速度 , uint = m/s
-        cur_current = motorData->given_current * can2cur;
+        if(outer_pos == false)pos_current = motorData->total_angle * can2pos * mech_dir + offset_angle; 
+        if(outer_vel == false)vel_current = motorData->speed_rpm * can2vel * mech_dir; // 将电机rpm转换为轮子的线速度 , uint = m/s
+        cur_current = motorData->given_current * can2cur * mech_dir;
     }
 }
 

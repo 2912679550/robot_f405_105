@@ -3,8 +3,10 @@
 #include "math.h"
 #include "motor.h"
 #include "adcSensor.h"
+#include "public_func.h"
 
-uint16_t aaa[3] = {0};
+uint16_t adcOri[3] = {0};
+float adcVal[3] = {0};
 
 namespace TskSteerBoard
 {
@@ -32,16 +34,6 @@ namespace TskSteerBoard
         boardVal_ = (MAIN_ASSIST_VAL *)pvPortMalloc(sizeof(MAIN_ASSIST_VAL));
         if (boardVal_ == nullptr)
             return;
-        if(boradType_ == BORAD_TYPE::ASSIST_BOARD){
-            // TCP_IP_ID : 0 对应 0 
-            // TCP_IP_ID : 1 对应 1
-            // TCP_IP_ID : 3 对应 2
-            // TCP_IP_ID : 4 对应 3
-            int index = TCP_IP_ID > 1 ? TCP_IP_ID - 1 : TCP_IP_ID;
-            adcSensor = new ANGLE_SENSOR(&hadc1, adc_angle_coeff[index], adc_angle_offset[index]);
-            if (adcSensor == nullptr)
-                return;
-        }
 
         // Create tasks
         rtn = xTaskCreate(main_assist_board_task, (const portCHAR *)"steerTask",
@@ -53,9 +45,8 @@ namespace TskSteerBoard
     {
         BaseType_t rtn;
         // * 舵轮控制需要的量
-        float dr1_delta_v = 0.f, dr2_delta_p = 0.f;
-        float dr1_tar_i = 0.f, dr2_tar_i = 0.f;
         uint8_t zero = 1;
+        float dr2_delta_p = 0.f; // 舵电机的角度增量
 
         // * 控制机构电机需要的量（暂无）
         while(true)
@@ -95,24 +86,29 @@ namespace TskSteerBoard
                 {
                     // * 正式的复位流程，舵电机保持旋转，轮电机锁死，直到找到零点传感器位置
                     usedMotors[0].set_tar(PID_MODE::PID_MODE_VELOCITY, 0.f); // 轮电机锁死
-                    usedMotors[1].set_tar(PID_MODE::PID_MODE_VELOCITY, PI / 4.f); // 舵电机定速旋转
+                    usedMotors[1].set_tar(PID_MODE::PID_MODE_VELOCITY, - PI / 8.f); // 舵电机定速旋转
                     // 检测到了激光传感器的位置，发送复位信息
-                    if(GPIO_PIN_SET == HAL_GPIO_ReadPin(LaserSensor0_GPIO_Port, LaserSensor0_Pin))
-                    {
-                        // 主动读取激光传感器GPIO，触发复位消息
-                        xQueueSend(reset_flag, (void *)&zero, 0);
-                        usedMotors[0].set_tar(PID_MODE::PID_MODE_VELOCITY, 0.f); // 轮电机锁死
-                        usedMotors[1].set_tar(PID_MODE::PID_MODE_VELOCITY, 0.f); // 舵电机停止旋转
-                        boardCmd_->state = steerState::STOP; // 复位完成，舵电机停止旋转
-                        usedMotors[1].set_cali_val(caliAngel_sensor[TCP_IP_ID]); // 设置舵电机的标定值
-                    }else if(usedMotors[1].work_log == WORKING_LOG::BLOCK){
+                    // if(GPIO_PIN_SET == HAL_GPIO_ReadPin(LaserSensor0_GPIO_Port, LaserSensor0_Pin))
+                    // {
+                    //     // 主动读取激光传感器GPIO，触发复位消息
+                    //     xQueueSend(reset_flag, (void *)&zero, 0);
+                    //     usedMotors[0].set_tar(PID_MODE::PID_MODE_VELOCITY, 0.f); // 轮电机锁死
+                    //     usedMotors[1].set_tar(PID_MODE::PID_MODE_VELOCITY, 0.f); // 舵电机停止旋转
+                    //     boardCmd_->state = steerState::STOP; // 复位完成，舵电机停止旋转
+                    //     usedMotors[1].set_cali_val(caliAngel_sensor[TCP_IP_ID]); // 设置舵电机的标定值
+                    // }else 
+                    if(usedMotors[1].work_log == WORKING_LOG::BLOCK){
                         // 由于复位过程单向进行，所以可能会出现舵电机初始位置已经超过了激光传感器的位置
                         // 此时舵电机会一直旋转到限位位置保持堵转，需要读取电机的工作状态来发布另一种复位消息
                         xQueueSend(reset_flag, (void *)&zero, 0);
-                        usedMotors[0].set_tar(PID_MODE::PID_MODE_VELOCITY, 0.f); // 轮电机锁死
-                        usedMotors[1].set_tar(PID_MODE::PID_MODE_VELOCITY, 0.f); // 舵电机停止旋转
-                        boardCmd_->state = steerState::STOP; // 复位完成，舵电机停止旋转
+                        // usedMotors[0].set_tar(PID_MODE::PID_MODE_VELOCITY, 0.f); // 轮电机锁死
+                        // usedMotors[1].set_tar(PID_MODE::PID_MODE_VELOCITY, 0.f); // 舵电机停止旋转
+                        usedMotors[0].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 轮电机失能
+                        usedMotors[1].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 舵电机失能    
                         usedMotors[1].set_cali_val(caliAngle_mech[TCP_IP_ID]); // 设置舵电机的标定值
+                        
+                        boardCmd_->state = steerState::STOP; // 复位完成，舵电机停止旋转
+                        boardVal_->state = steerState::STOP; // 复位完成，舵电机停止旋转
                     }
                 }
                 else if(boardCmd_->state == steerState::NORMAL){
@@ -138,22 +134,18 @@ namespace TskSteerBoard
 
             // ! 在这里插入第三个机构电机的控制代码
             // * 首先从传感器获取测量值
-            adcSensor->getSensorVal();
-            // HAL_ADC_Start_DMA(&hadc1, (uint32_t *)aaa, 3); // 启动ADC转换
-            // for (int i = 0; i < 3 - boradType_; i++){
-            //     // 主控制板（枚举值为1）有两个传感器，3-1=2
-            //     // 辅助控制板（枚举值为2）有一个传感器，3-2=1
-            //     // 只解析有效的传感器数据
-            //     adcRealVal[i] = float(adcVal[i]) * adcCoeff[i] + adcOffset[i];
-            // }
-            // // 生成机构电机PID当前值与目标值
-            // if(boradType_ == BORAD_TYPE::MAIN_BOARD){
-            //     usedMotors[2].pos_current = (adcRealVal[0] + adcRealVal[1]) / 2;
-            //     usedMotors[2].pos_tar = boardCmd_->dr3_tar_tight;
-            // }else if(boradType_ == BORAD_TYPE::ASSIST_BOARD){
-            //     usedMotors[2].pos_current = adcRealVal[0];
-            //     usedMotors[2].pos_tar = boardCmd_->dr3_tar_angle;
-            // }
+            // adcSensor->getSensorVal();
+            HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adcOri, 3); // 启动ADC转换
+            if(boradType_ == BORAD_TYPE::MAIN_BOARD){
+                // 主控制板有两个传感器，分别是左右弹簧的长度
+            }else if(boradType_ == BORAD_TYPE::ASSIST_BOARD){
+                int index = 0; // 辅助控制板有一个传感器 ， 夹角传感器参数索引
+                // 前左： 0，对应参数数组0号索引 // 前右： 1，对应参数数组1号索引
+                // 后左： 3，对应参数数组2号索引 // 后右： 4，对应参数数组3号索引
+                index = TCP_IP_ID > 1 ? TCP_IP_ID - 1: TCP_IP_ID; // 夹角传感器参数索引
+                adcVal[0] = float(adcOri[0]) * adc_angle_coeff[index] + adc_angle_offset[index]; // 夹角传感器的值
+                usedMotors[2].pos_current = angle_stand_deg(adcVal[0]); // 夹角传感器的值
+            }
             
             // ! 机构电机控制结束
             // todo 发送can控制帧、存储反馈值，并判断是否发送
@@ -185,6 +177,4 @@ namespace TskSteerBoard
             }
         }
     }
-
-
 };

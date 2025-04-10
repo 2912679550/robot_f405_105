@@ -5,7 +5,7 @@
 // PC0：ADC1_IN10  rank 1
 // PC1：ADC1_IN11  rank 2
 // PC2：ADC1_IN12  rank 3
-ADC_SENSOR *adcSensor;
+// ADC_SENSOR *adcSensor;
 // HAL_ADC_Start_DMA(&hadc1 , (uint32_t *)adcVal, 2); // 启动ADC采样，读取电压值
 ANGLE_SENSOR::ANGLE_SENSOR(ADC_HandleTypeDef *hadc , float adcCoeff, float adcOffset)
 {

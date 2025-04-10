@@ -36,3 +36,27 @@ float cacul_ppi_angle(const float tar, const float cur)
     return (tar - cur < -PI) ? (tar - cur + 2 * PI) : (tar - cur > PI) ? (tar - cur - 2 * PI)
                                                                        : (tar - cur);
 }
+
+float angle_stand_deg(float angle){
+    while(angle < 0.0f){
+        angle += 360.0f;
+    }
+    while(angle > 360.0f){
+        angle -= 360.0f;
+    }
+    return angle;
+}
+
+float angle_stand_rad(float angle){
+    while(angle < 0.0f){
+        angle += 2 * PI;
+    }
+    while(angle > 2 * PI){
+        angle -= 2 * PI;
+    }
+    return angle;
+}
+
+
+
+

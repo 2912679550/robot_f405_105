@@ -29,6 +29,8 @@ extern "C"
 // // inline float dr2_rpmConvert(int16_t rpm);
 float saturate(float v, float max, float min);
 float cacul_ppi_angle(const float tar, const float cur);
+float angle_stand_deg(float angle); // 将角度转换到0~360度之间
+float angle_stand_rad(float angle); // 将角度转换到0~2pi之间
 
 #endif /* __cplusplus */
 

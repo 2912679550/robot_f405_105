@@ -79,33 +79,6 @@ uint8_t *ipv4_addr(char *ip)
     return real_ip;
 }
 
-// // // io扩展板，与4路ADC引脚复用
-// // static void MX_IO_Init(void)
-// // {
-// //     GPIO_InitTypeDef GPIO_InitStruct = {0};
-// //     // PC0 PC1 input
-// //     GPIO_InitStruct.Pin = KEY_0_Pin | KEY_1_Pin;
-// //     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-// //     // 引脚悬空，避免默认状态下板切换类型时电平冲突
-// //     GPIO_InitStruct.Pull = GPIO_NOPULL;
-// //     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-// //     HAL_GPIO_Init(KEY_GPIO_Port, &GPIO_InitStruct);
-// 
-// //     // PC2 output
-// //     GPIO_InitStruct.Pin = LED_0_Pin;
-// //     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-// //     // 引脚悬空，避免板切换类型时电平冲突
-// //     GPIO_InitStruct.Pull = GPIO_NOPULL;
-// //     HAL_GPIO_Init(LED_0_GPIO_Port, &GPIO_InitStruct);
-// 
-// //     // PA3 output
-// //     GPIO_InitStruct.Pin = LED_1_Pin;
-// //     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-// //     // 引脚悬空，避免板切换类型时电平冲突
-// //     GPIO_InitStruct.Pull = GPIO_NOPULL;
-// //     HAL_GPIO_Init(LED_1_GPIO_Port, &GPIO_InitStruct);
-// // }
-
 // 解析并设置以太网配置参数，包括 IP 地址、板类型和反馈频率
 // 返回值 res = 0b00000111，表示配置成功，从低到高位分别表示：
 // IP地址配置成功、板类型配置成功、反馈频率配置成功
@@ -343,6 +316,7 @@ void StartDefaultTask(void *argument)
         if ((res & 0xF) == 0x7)
         {
             W5500_init(&cmdEthInfo);
+            W5500_write_config(&cmdEthInfo);
             ethPeriod = cmdEthInfo.period;
             sprintf(dbgStr, "ip:%d.%d.%d.%d, type:%d, freq:%d\r\n",
                     cmdEthInfo.ip[0], cmdEthInfo.ip[1], cmdEthInfo.ip[2],

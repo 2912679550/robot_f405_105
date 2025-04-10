@@ -39,12 +39,20 @@ public:
     PID_MODE ctrl_mode = PID_MODE::PID_MODE_IDLE ; // 0:stop 1:pos 2:vel 3:torque
     WORKING_LOG work_log = WORKING_LOG::NORMAL; // 电机工作状态
 
+    bool outer_pos = false; // 配置电机是否使用外部传感器的测量值作为位置值
+    bool outer_vel = false; // 配置电机是否使用外部传感器的测量值作为速度值
+
+    float mech_dir = 1.0f; // 电机安装后正反转在机械数学定义上的方向
+
+    int block_cnt = 0; // 堵转计数器
+
     float pos_tar;      // 目标位置
-    float vel_tar;      // 目标速度
-    float cur_tar;      // 目标电流
-    
     float pos_current;   // 当前位置
+
+    float vel_tar;      // 目标速度
     float vel_current;   // 当前位置的速度
+    
+    float cur_tar;      // 目标电流
     float cur_current;   // 当前位置的电流
     
     // 从电机转子到pid控制时输入的当前值的转换系数（后续会直接保存到 pos_current中）
@@ -70,8 +78,8 @@ public:
     void set_cali_val(float offset);
 
 private:
-    int block_cur = 8.0f; // 堵转电流值
-    int block_max = 200; // 堵转计数上限：连续200次期望电流值超过设定的堵转电流值，则认为电机堵转
+    int block_cur = 5.0f; // 堵转电流值
+    int block_max = 20; // 堵转计数上限：连续200次期望电流值超过设定的堵转电流值，则认为电机堵转
 };
 
 extern MOTOR usedMotors[MOTOR_NUM]; // 0:dr1 1:dr2 2:dr3
