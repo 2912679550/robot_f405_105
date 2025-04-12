@@ -30,8 +30,8 @@ const float adc_angle_coeff[4] = {
 const float adc_angle_offset[4] = {
     90.0f - 47.0f, // 偏移量
     90.0f - 162.0f, // 偏移量
-    0.0f,
-    0.0f // 偏移量
+    90.0f - 123.0f,
+    90.0f - 165.0f // 偏移量
 };
 
 // ! 以下类暂时弃用

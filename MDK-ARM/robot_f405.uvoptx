@@ -220,6 +220,11 @@
           <WinNumber>1</WinNumber>
           <ItemText>adcVal</ItemText>
         </Ww>
+        <Ww>
+          <count>12</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>\\robot_f405\../App/Src/motor.cpp\usedMotors[2].ctrl_mode</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
@@ -281,6 +286,11 @@
           <count>11</count>
           <WinNumber>2</WinNumber>
           <ItemText>TskSteerBoard::boardVal_</ItemText>
+        </Ww>
+        <Ww>
+          <count>12</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>debug</ItemText>
         </Ww>
       </WatchWindow2>
       <Tracepoint>

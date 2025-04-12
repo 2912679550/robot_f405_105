@@ -7,6 +7,7 @@
 
 uint16_t adcOri[3] = {0};
 float adcVal[3] = {0};
+uint16_t debug = 0;
 
 namespace TskSteerBoard
 {
@@ -51,6 +52,8 @@ namespace TskSteerBoard
         // * 控制机构电机需要的量（暂无）
         while(true)
         {
+            // 测试传感器
+            debug = HAL_GPIO_ReadPin(LaserSensor0_GPIO_Port, LaserSensor0_Pin);
             // rtn = xSemaphoreTake(mainAssistTickSem, 2);
             // configASSERT(rtn);
             vTaskDelay(tskPeriod); // 5ms
@@ -170,10 +173,10 @@ namespace TskSteerBoard
             boardVal_->dr3_tar_spring = 9.f;
             boardVal_->real_spring1 = 10.f;
             boardVal_->real_spring2 = 11.f;
+            // * 每隔ethPeriod个周期将舵轮的状态信息发送到以太网
+            xQueueSend(TskEth::mainAssistValQueue, boardVal_, 0);
             if(steerCnt % ethPeriod == 0)
             {
-                // * 每隔ethPeriod个周期将舵轮的状态信息发送到以太网
-                xQueueSend(TskEth::mainAssistValQueue, boardVal_, 0);
             }
         }
     }
