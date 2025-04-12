@@ -11,6 +11,7 @@
 char dbgStr[CMD_BUF_SIZE];
 uint8_t cmdRxBuf[CMD_BUF_SIZE];
 uint8_t cmdTxBuf[CMD_BUF_SIZE];
+uint8_t debugMain = 0;
 
 extern uint8_t rxBuf[RECV_BUF_SIZE];
 extern uint8_t txBuf[SEND_BUF_SIZE];
@@ -298,6 +299,12 @@ void StartDefaultTask(void *argument)
     // 获取默认参数
     W5500_get_config(&defaultEthInfo);  // 从芯片的物理存储器中读取配置信息
     memcpy(&cmdEthInfo, &defaultEthInfo, sizeof(wiz_NetInfo));
+
+    // for(;;){
+    //     debugMain = HAL_GPIO_ReadPin(LaserSensor0_GPIO_Port, LaserSensor0_Pin);
+    //     osDelay(2);
+    // }
+    
     /* Infinite loop */
     for (;;)
     {
