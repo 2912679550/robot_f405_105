@@ -18,6 +18,7 @@ extern "C"
 #include "public_func.h"
 
 #define ANGLE_SENSOR_MAX_V 4024.0f // ADC采样值最大值
+#define SPRING_SENSOR_MAX_V 4096.0f // ADC采样值最大值
 
 // 將0~3.3V的ADC值转换为0~360度的角度值
 const float adc_angle_coeff[4] = {
@@ -25,6 +26,16 @@ const float adc_angle_coeff[4] = {
     360.0 / ANGLE_SENSOR_MAX_V,
     360.0 / ANGLE_SENSOR_MAX_V,
     360.0 / ANGLE_SENSOR_MAX_V // 度每伏
+};
+
+const float adc_spring_coeff[2][2] = {
+    {0.0f, 0.0f}, // 前左、前右弹簧传感器的系数
+    {0.0f, 0.0f}  // 后左、后右弹簧传感器的系数
+};
+
+const float adc_spring_offset[2][2] = {
+    {0.0f, 0.0f}, // 前左、前右弹簧传感器的偏移量
+    {0.0f, 0.0f}  // 后左、后右弹簧传感器的偏移量
 };
 
 const float adc_angle_offset[4] = {

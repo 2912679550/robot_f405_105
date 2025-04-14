@@ -54,6 +54,7 @@ namespace TskMotorPID
             // rtn = xSemaphoreTake(motorTickSem, 2);
             // configASSERT(rtn);
             motorCnt++;
+            
 
             // * 接收电机数据
             if (pdPASS == xQueueReceive(can1RxQueueHandle, motor_, 0) && motor_ -> id < MOTOR_NUM)
@@ -65,6 +66,7 @@ namespace TskMotorPID
             float delta_p = 0.f;
             float delta_v = 0.f;
             float tar_i = 0.f;
+
             // * 每次循环都固定发送一次can控制帧（但由于控制信息频率的限制，并不是每次发送的都是最新的信息）
             for(int i = 0; i < MOTOR_NUM; i++){
                 // 遍历所有需要使用的电机，根据电机的控制模式解算出对应的电流值，装填到can帧中
@@ -89,6 +91,7 @@ namespace TskMotorPID
                         usedMotors[i].pos_tar = usedMotors[i].pos_current;
                         usedMotors[i].vel_tar = usedMotors[i].vel_current;
                         usedMotors[i].cur_tar = 0.f;
+                        usedMotors[i].work_log = WORKING_LOG::NORMAL; // 电机工作状态恢复正常
                         tar_i = 0.f;
                         break;
                     }

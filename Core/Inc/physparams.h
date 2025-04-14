@@ -58,8 +58,8 @@ const float wheelR[2] = { 100.0 / 1000.0 * 0.5 , 60.0 / 1000.0 * 0.5}; //
 const float wheelRatio[2] = {M2006_RATIO * 19.71 , M2006_RATIO * 40.0 / 14.0}; // 从电机转子rpm到车轮rpm       19.0f * 2.7551
 const float steerRatio[2] = {M2006_RATIO * 125.0/15.0 , M2006_RATIO * 81.0 / 15.0}; // 从电机转子rpm到舵向rpm       19.0f * 2.7551
 
-// 位置控制中最大线速度
-const float maxVel = 0.5f; // 0.3m/s
+// 机器人运动的最大线速度
+const float maxVel = 0.2f; // 0.3m/s
 // 位置控制中最大角速度
 const float maxOmg = 1.f; // 1rad/s
 // 舵轮控制中最大电流
@@ -80,6 +80,7 @@ const float thPosPidIband[2] =
 // 舵轮控制中最大角速度
 const float maxSteerOmg = PI; // 理论上最大11rad/s
 const float maxScrewOmg = 10.0f; // 限制丝杠最大速度
+
 
 // * 舵电机速度环
 const float thVelPidP[2] = 
@@ -133,4 +134,20 @@ const float steerDir[6] = {
     1.f, 1.f, 1.f, 1.f, 1.f, 1.f}; // 舵向电机旋转方向与数学定义的关系 usedMotors[1]
 const float mechDir[6] = {
     1.f, 1.f, 1.f, 1.f, 1.f, 1.f}; // 机构电机选装方向与数学定义的关系 usedMotors[2]
+
+// ! 用于定义用到的一些运动范围
+// 舵电机标定后的角度范围
+const float steerDirRange[2] = 
+    {0.02 * PI, PI}; // 机械标定的形式最小值 0 rad处会有碰撞，所以加一点保护，而最大值PI处是不会有机械限位的
+// 两臂家教的输入角度范围：
+// 夹360mm管子时，臂的角度124.6°
+// 夹220mm管子时，臂的角度61°
+const float mechAngleRange[2] = {
+    180.0f - 125.0f,
+    180.0f - 61.0f
+}; // 两臂夹角传感器的0点值被定义为模型中直观感觉的补角，单位为度
+
+const float mechSpringMin = 30.0f;  // 期望夹紧弹簧达到预期夹紧力时的最小长度
+const float mechSpringMax = 50.0f;  // 期望夹紧弹簧达到预期夹紧力时的最大长度
+
 #endif /* PHYS_PARAMS_H_ */
