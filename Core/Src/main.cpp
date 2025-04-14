@@ -687,7 +687,8 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : LaserSensor0_Pin */
   GPIO_InitStruct.Pin = LaserSensor0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+//   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(LaserSensor0_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : W5500_CS_Pin */
