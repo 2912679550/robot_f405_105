@@ -18,7 +18,7 @@
 
 //================  system parameters
 // ! 固定参数，一般不修改
-const float PI = 3.14159265358979323846f;
+#define PI  3.14159265358979323846f
 // rad/s转换到rpm
 const float toRPM = 9.55f;
 // 系统控制周期
@@ -79,7 +79,7 @@ const float thPosPidIband[2] =
     {PI / 10.f, PI / 10.f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
 // 舵轮控制中最大角速度
 const float maxSteerOmg = PI; // 理论上最大11rad/s
-const float maxScrewOmg = 10.0f; // 限制丝杠最大速度
+const float maxScrewOmg = 20.0f; // 限制丝杠最大速度
 
 
 // * 舵电机速度环
@@ -112,13 +112,13 @@ const float mechPosPidIband[2] =
     {0.f, 10.f}; 
 // * 机构电机速度环
 const float mechVelPidP[2] = 
-    {0.f, 150.f}; 
+    {250.f, 150.f}; 
 const float mechVelPidI[2] = 
-    {0.f, 50.f};
+    {200.f, 50.f};
 const float mechVelPidD[2] = 
-    {0.f, 5.f};
+    {120.f, 5.f};
 const float mechVelPidIband[2] = 
-    {0.f, 500.f};
+    {500.f, 500.f};
 
 // ! 用于标定舵轮角度值
 // 注意在motor类中解析时是将这个值加在了电机的原始值上，需要注意正负符号
@@ -129,7 +129,7 @@ const double caliAngle_mech[6] = {
 
 // ! 机构电机的安装方向
 const float wheelDir[6] = {
-    1.f, 1.f, 1.f, 1.f, 1.f, 1.f}; // 轮电机旋转方向与数学定义的关系 usedMotors[0]
+    -1.f, -1.f, -1.f, 1.f, -1.f, 1.f}; // 轮电机旋转方向与数学定义的关系 usedMotors[0]
 const float steerDir[6] = {
     1.f, 1.f, 1.f, 1.f, 1.f, 1.f}; // 舵向电机旋转方向与数学定义的关系 usedMotors[1]
 const float mechDir[6] = {

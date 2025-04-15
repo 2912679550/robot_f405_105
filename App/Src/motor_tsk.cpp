@@ -199,6 +199,12 @@ namespace TskMotorPID
         usedMotors[2].can2cur = C610ICoeff; // dr3 机构电机
         usedMotors[2].can2vel = 1/ toRPM / M2006_RATIO; // dr3 机构电机，单位为rad/s
         usedMotors[2].can2pos = 0; // dr3 机构电机,单位为rad
+
+        // * 配置旋转方向
+        usedMotors[0].mech_dir = wheelDir[TCP_IP_ID];
+        usedMotors[1].mech_dir = steerDir[TCP_IP_ID];
+        usedMotors[2].mech_dir = mechDir[TCP_IP_ID]; // 机构电机的方向与电机的安装方向一致
+
     }
 
 } // namespace TskMotorPID

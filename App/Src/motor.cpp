@@ -53,14 +53,14 @@ float MOTOR::pidTick(PID_MODE mode, float delta){
 void MOTOR::unpackCanData(moto_measure_t *motorData){
     if(motorData == nullptr) return;
     if(cali_flag == false){
-        if(outer_pos == false)pos_current = motorData->total_angle * can2pos * mech_dir; // 这里的total_angle是电调返回的直接值，大疆使用了0~8191来表示0~360度，所以数值最后还需要乘一个2pi/8192
-        if(outer_vel == false)vel_current = motorData->speed_rpm * can2vel * mech_dir; // 将电机rpm转换为轮子的线速度 , uint = m/s
-        cur_current = motorData->given_current * can2cur * mech_dir;
+        if(outer_pos == false)pos_current = motorData->total_angle * can2pos ; // 这里的total_angle是电调返回的直接值，大疆使用了0~8191来表示0~360度，所以数值最后还需要乘一个2pi/8192
+        if(outer_vel == false)vel_current = motorData->speed_rpm * can2vel ; // 将电机rpm转换为轮子的线速度 , uint = m/s
+        cur_current = motorData->given_current * can2cur ;
     }else
     {
-        if(outer_pos == false)pos_current = motorData->total_angle * can2pos * mech_dir + offset_angle; 
-        if(outer_vel == false)vel_current = motorData->speed_rpm * can2vel * mech_dir; // 将电机rpm转换为轮子的线速度 , uint = m/s
-        cur_current = motorData->given_current * can2cur * mech_dir;
+        if(outer_pos == false)pos_current = motorData->total_angle * can2pos  + offset_angle; 
+        if(outer_vel == false)vel_current = motorData->speed_rpm * can2vel ; // 将电机rpm转换为轮子的线速度 , uint = m/s
+        cur_current = motorData->given_current * can2cur ;
     }
 }
 
@@ -71,7 +71,7 @@ void MOTOR::set_tar(PID_MODE mode, float tar){
             pos_tar = tar;
             break;
         case PID_MODE::PID_MODE_VELOCITY:
-            vel_tar = tar;
+            vel_tar = tar * mech_dir;
             break;
         case PID_MODE::PID_MODE_TORQUE:
             cur_tar = tar;

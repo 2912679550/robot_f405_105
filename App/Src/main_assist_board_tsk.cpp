@@ -11,6 +11,7 @@ uint16_t adcOri[3] = {0};
 float adcVal[3] = {0};
 uint16_t debug = 0;
 bool springTight = false;
+bool pcOnline = false; // 连接上PC的标志位
 
 namespace TskSteerBoard
 {
@@ -35,6 +36,12 @@ namespace TskSteerBoard
         boardCmd_ = (MAIN_ASSIST_CMD *)pvPortMalloc(sizeof(MAIN_ASSIST_CMD));
         if (boardCmd_ == nullptr)
             return;
+        // 给一个命令的初始值
+        boardCmd_->state = steerState::STOP;
+        boardCmd_->dr1_tar_vel = 0.f; // 舵轮的目标速度
+        boardCmd_->dr2_tar_pos = 0.5f; // 舵轮的目标位置
+        boardCmd_->dr3_tar_angle = mechAngleRange[0];
+        boardCmd_->dr3_tar_tight = 0.f; // 夹紧状态，默认松开
         boardVal_ = (MAIN_ASSIST_VAL *)pvPortMalloc(sizeof(MAIN_ASSIST_VAL));
         if (boardVal_ == nullptr)
             return;
@@ -63,9 +70,13 @@ namespace TskSteerBoard
             vTaskDelay(tskPeriod); // 5ms
             steerCnt++;
 
-            // * 接收控制指令            
+            // * 接收控制指令
+            BaseType_t rtn;
             // boardCmd_中包含了舵轮的目标速度和位置以及主控制板的夹紧状态和辅助控制板的夹角
-            xQueueReceive(TskEth::mainAssistCmdQueue, boardCmd_, 0);
+            rtn = xQueueReceive(TskEth::mainAssistCmdQueue, boardCmd_, 0);
+            if(rtn == pdPASS){
+                pcOnline = true; // 连接上PC的标志位
+            }
         #if main_assist_debug
             // * 首先从传感器获取测量值
             // adcSensor->getSensorVal();
@@ -81,7 +92,8 @@ namespace TskSteerBoard
                 usedMotors[2].pos_current = angle_stand_deg(adcVal[0]); // 夹角传感器的值
             }
         #else
-            // ! 舵轮状态机控制逻辑
+            if(pcOnline == false) continue;    
+        // ! 舵轮状态机控制逻辑
             switch(boardCmd_->state){
                 case steerState::RESET:
                     // 接收到了重置信息，但当前舵轮的状态不是复位或舵轮有速度
@@ -201,17 +213,18 @@ namespace TskSteerBoard
             }
             // 执行
             if(springTight == false){
-                usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, 0.1 * PI); // 夹紧
+                usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, 15.0f); // 夹紧
                 if(usedMotors[2].work_log == WORKING_LOG::BLOCK) springTight = true;
             }else{
-                usedMotors[2].ctrl_mode == PID_MODE::PID_MODE_IDLE; // 夹紧完成，电机失能
+                usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 夹紧完成，电机失能
             }
         }else{
             // 期望松开，松开的指标设计为弹簧的长度达到最大值或者出发了限位传感器报警
-            usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, -0.1 * PI); // 松开
+            usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, -15.0f); // 松开 15为测试的速度
             debug = HAL_GPIO_ReadPin(LaserSensor0_GPIO_Port, LaserSensor0_Pin);
             if(usedMotors[2].pos_current >= mechSpringMax || debug == 1){
                 // 触发松开完成标志，失能电机
+                // debug 对应的传感器在有金属杆时为0，没金属杆时为1
                 usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 夹紧完成，电机失能
             }
         }
