@@ -76,10 +76,10 @@ public:
     void set_tar(PID_MODE mode, float tar) ;
     void set_delta(PID_MODE mode, float delta) ;
     void set_cali_val(float offset);
+    int block_max = 20; // 堵转计数上限：连续200次期望电流值超过设定的堵转电流值，则认为电机堵转
+    float block_cur = 5.0f; // 堵转电流值
 
 private:
-    int block_cur = 5.0f; // 堵转电流值
-    int block_max = 20; // 堵转计数上限：连续200次期望电流值超过设定的堵转电流值，则认为电机堵转
 };
 
 extern MOTOR usedMotors[MOTOR_NUM]; // 0:dr1 1:dr2 2:dr3

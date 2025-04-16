@@ -20,6 +20,8 @@ namespace TskSteerBoard
     uint8_t tskPeriod = 5; // ms
     MAIN_ASSIST_CMD *boardCmd_ = nullptr; // 用于控制辅助驱动轮的命令
     MAIN_ASSIST_VAL *boardVal_ = nullptr; // 用于反馈辅助驱动轮的状态
+    // 实测发现压缩量传感器的数据并不稳定，所以每次夹紧后存储一下当前的夹紧长度，并在后续通过当前的夹紧长度来判断加紧是否失效
+    float spring_tight_length_[2] = {0.0f, 0.0f}; 
 
     // * 信息容器
     BORAD_TYPE boradType_ = BORAD_TYPE::idle; // 控制板类型(这个任务中只会设置为主驱动轮或辅助驱动轮)
@@ -45,6 +47,8 @@ namespace TskSteerBoard
         boardVal_ = (MAIN_ASSIST_VAL *)pvPortMalloc(sizeof(MAIN_ASSIST_VAL));
         if (boardVal_ == nullptr)
             return;
+
+        load_settings_();
 
         // Create tasks
         rtn = xTaskCreate(main_assist_board_task, (const portCHAR *)"steerTask",
@@ -83,6 +87,14 @@ namespace TskSteerBoard
             HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adcOri, 3); // 启动ADC转换
             if(boradType_ == BORAD_TYPE::MAIN_BOARD){
                 // 主控制板有两个传感器，分别是左右弹簧的长度
+                int index = 0;
+                // 前中： 2 ， 对应参数数组0号索引
+                // 后中： 5 ， 对应参数数组1号索引
+                index = TCP_IP_ID < 3 ? 0 : 1; // 弹簧传感器参数索引
+                adcVal[0] = float(adcOri[0]) * adc_spring_coeff[index][0] + adc_spring_offset[index][0]; // 弹簧传感器的值
+                adcVal[1] = float(adcOri[1]) * adc_spring_coeff[index][1] + adc_spring_offset[index][1]; // 弹簧传感器的值
+                usedMotors[2].pos_current = (adcVal[0] + adcVal[1]) / 2.0f; // 弹簧传感器的值,取平均值
+                // 中间丝杠电机的控制逻辑
             }else if(boradType_ == BORAD_TYPE::ASSIST_BOARD){
                 int index = 0; // 辅助控制板有一个传感器 ， 夹角传感器参数索引
                 // 前左： 0，对应参数数组0号索引 // 前右： 1，对应参数数组1号索引
@@ -206,7 +218,9 @@ namespace TskSteerBoard
         if(boardVal_->dr3_tar_spring > 10.0f){
             // 期望夹紧 , 夹紧的成功仅通过电机是否堵转来判断，并给一个较大的判断阈值
             // 夹紧成功就将电机失能，直到检测到弹簧的压缩量超出了阈值，再重新给夹紧失效，使得电机重新开始工作直到堵转
-            if(ABSF(usedMotors[2].pos_current - boardVal_->dr3_tar_spring) < 5.0f && springTight == true){
+            if( spring_tight_length_[0] - adcVal[0] < 10.0f && 
+                spring_tight_length_[1] - adcVal[1] < 10.0f &&
+                springTight == true){
 
             }else{
                 springTight = false; // 夹紧状态失效，重新开始夹紧
@@ -214,7 +228,19 @@ namespace TskSteerBoard
             // 执行
             if(springTight == false){
                 usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, 15.0f); // 夹紧
-                if(usedMotors[2].work_log == WORKING_LOG::BLOCK) springTight = true;
+                if(
+                    // 夹紧电机堵转或者到达传感器阈值范围之内
+                    usedMotors[2].work_log == WORKING_LOG::BLOCK ||
+                    (
+                        adcVal[0] >= adc_spring_val[index][0] && 
+                        adcVal[1] >= adc_spring_val[index][1]
+                    )
+                ){
+                    springTight = true;
+                    // 存储当前加紧值
+                    spring_tight_length_[0] = adcVal[0]; // 左右测距传感器测量得到的弹簧长度
+                    spring_tight_length_[1] = adcVal[1]; // 左右测距传感器测量得到的弹簧长度
+                }
             }else{
                 usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 夹紧完成，电机失能
             }
@@ -222,7 +248,8 @@ namespace TskSteerBoard
             // 期望松开，松开的指标设计为弹簧的长度达到最大值或者出发了限位传感器报警
             usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, -15.0f); // 松开 15为测试的速度
             debug = HAL_GPIO_ReadPin(LaserSensor0_GPIO_Port, LaserSensor0_Pin);
-            if(usedMotors[2].pos_current >= mechSpringMax || debug == 1){
+            if (debug == 1)
+            {
                 // 触发松开完成标志，失能电机
                 // debug 对应的传感器在有金属杆时为0，没金属杆时为1
                 usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 夹紧完成，电机失能
@@ -244,6 +271,22 @@ namespace TskSteerBoard
         boardVal_->dr3_tar_angle = saturate(boardCmd_->dr3_tar_angle, mechAngleRange[1], mechAngleRange[0]); // 夹角传感器的值
         boardVal_->dr3_real_angle = usedMotors[2].pos_current; // 夹角传感器的值
         // 夹角电机的控制逻辑
-        usedMotors[2].set_tar(PID_MODE::PID_MODE_POSITION, boardVal_->dr3_tar_angle); // 夹角电机位置环的输入值，配置舵电机角度
+        if(boardCmd_->dr3_tar_tight > 10.0f){
+            // 发来夹紧指令时就不在控制夹角电机
+            usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE;
+        }else{
+            usedMotors[2].set_tar(PID_MODE::PID_MODE_POSITION, boardVal_->dr3_tar_angle); // 夹角电机位置环的输入值，配置舵电机角度
+        }
+    }
+
+    void load_settings_(){
+        if(boradType_ == BORAD_TYPE::MAIN_BOARD){
+            int index = 0;
+            // 前中： 2 ， 对应参数数组0号索引
+            // 后中： 5 ， 对应参数数组1号索引
+            index = TCP_IP_ID < 3 ? 0 : 1; // 弹簧传感器参数索引
+            spring_tight_length_[0] = adc_spring_val[index][0];
+            spring_tight_length_[1] = adc_spring_val[index][1]; // 弹簧传感器的值,取平均值
+        }
     }
 };

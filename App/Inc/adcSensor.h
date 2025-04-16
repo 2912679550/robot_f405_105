@@ -28,9 +28,23 @@ const float adc_angle_coeff[4] = {
     360.0 / ANGLE_SENSOR_MAX_V // 度每伏
 };
 
+/*
+压缩量传感器数据表：
+弹簧原长：58.00mm
+弹簧最短长度：47.00mm 
+前左：
+
+前右：
+
+后左：
+
+后右：
+
+*/
+
 const float adc_spring_coeff[2][2] = {
-    {0.0f, 0.0f}, // 前左、前右弹簧传感器的系数
-    {0.0f, 0.0f}  // 后左、后右弹簧传感器的系数
+    {1.0f, 1.0f}, // 前左、前右弹簧传感器的系数
+    {1.0f, 1.0f}  // 后左、后右弹簧传感器的系数
 };
 
 const float adc_spring_offset[2][2] = {
@@ -45,6 +59,11 @@ const float adc_angle_offset[4] = {
     90.0f - 165.0f // 偏移量
 };
 
+const float spring_safe_dis = 8.0f;
+const float adc_spring_val[2][2] = {
+    {270.0f, 270.0f}, // 前左、前右弹簧传感器判断是否夹紧的阈值
+    {249.0f - spring_safe_dis, 711.0f - spring_safe_dis}  // 后左、后右弹簧传感器判断是否夹紧的阈值
+};
 // ! 以下类暂时弃用
 
 class ADC_SENSOR{

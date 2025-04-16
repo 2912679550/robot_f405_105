@@ -36,6 +36,7 @@ namespace TskSteerBoard
     // TCP_IP_ID : 4 对应 3
     extern int TCP_IP_ID; // 配置的IP地址的末尾，表示板子的序号，用于后续读取不同的传感器参数值
     void Init();
+    void load_settings_();
     void main_assist_board_task(void *pvParameters);
     void main_board_sub_tsk();      // 主驱动轮子任务，主要用于夹紧丝杠的工作
     void assist_board_sub_tsk();    // 辅助驱动轮子任务，主要用于控制两臂家教的丝杠电机

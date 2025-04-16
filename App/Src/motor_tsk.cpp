@@ -179,6 +179,11 @@ namespace TskMotorPID
             
             usedMotors[2].outer_pos = true; // 机构电机使用外部传感器的测量值作为位置值
         }
+        else if(boradType_ == BORAD_TYPE::MAIN_BOARD){
+            // 配置夹紧电机的堵转电流
+            dr3PosPID_ = nullptr; // 主控板的机构电机不需要位置环
+            usedMotors[2].block_cur = 7.0f;
+        }
         
         // * 装载到电机类中
         usedMotors[0].initMotorPid(dr1VelPID_, nullptr); // dr1 速度环
