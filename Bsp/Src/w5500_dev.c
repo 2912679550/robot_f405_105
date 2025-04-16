@@ -166,31 +166,87 @@ void W5500_write_config(wiz_NetInfo *_set)
   }
 }
 
+// void W5500_get_config(wiz_NetInfo *_get)
+// {
+//   uint32_t cpuId[3];
+//   uint32_t macCode;
+// //  cpuId[0] = *(uint32_t *)(0x1ffff7e8);
+// //  cpuId[1] = *(uint32_t *)(0x1ffff7ec);
+// //  cpuId[2] = *(uint32_t *)(0x1ffff7f0);
+// 	cpuId[0] = *(uint32_t *)(0x1fff7a10);
+//   cpuId[1] = *(uint32_t *)(0x1fff7a14);
+//   cpuId[2] = *(uint32_t *)(0x1fff7a18);
+
+//   defaultInfo.mac[2] = (macCode & 0x000000FF);
+//   defaultInfo.mac[3] = (macCode & 0x0000FF00) >> 8;
+//   defaultInfo.mac[4] = (macCode & 0x00FF0000) >> 16;
+//   defaultInfo.mac[5] = (macCode & 0xFF000000) >> 24;
+	
+//   if (at24_isConnected())
+//   {
+//     at24_read(0, (uint8_t *)_get, sizeof(wiz_NetInfo), 100);
+//   }
+
+//   if ((_get->mac[0] == 0xff) && (_get->mac[1] == 0xff) && (_get->mac[2] == 0xff) && (_get->mac[3] == 0xff) && (_get->mac[4] == 0xff) && (_get->mac[5] == 0xff))
+//   {
+//     memcpy(_get, &defaultInfo, sizeof(wiz_NetInfo));
+//   }
+// }
+
 void W5500_get_config(wiz_NetInfo *_get)
-{
+{  
   uint32_t cpuId[3];
   uint32_t macCode;
-//  cpuId[0] = *(uint32_t *)(0x1ffff7e8);
-//  cpuId[1] = *(uint32_t *)(0x1ffff7ec);
-//  cpuId[2] = *(uint32_t *)(0x1ffff7f0);
-	cpuId[0] = *(uint32_t *)(0x1fff7a10);
+
+  wiz_NetInfo _sendinfo = {
+    .mac = {0x02, 0x00, 0x00, 0x00, 0x00, 0x00},
+    .ip = {192, 168, 0, 199},
+    .sn = {255, 255, 255, 0},
+    .gw = {192, 168, 0, 1},
+    .dns = {144, 144, 144, 144},
+    .dhcp = NETINFO_STATIC,
+    .type = 4,
+    .period = 10};
+
+  // STM32F1x
+  //  cpuId[0] = *(uint32_t *)(0x1ffff7e8);
+  //  cpuId[1] = *(uint32_t *)(0x1ffff7ec);
+  //  cpuId[2] = *(uint32_t *)(0x1ffff7f0);
+    
+  // STM32F4x  
+  cpuId[0] = *(uint32_t *)(0x1fff7a10);
   cpuId[1] = *(uint32_t *)(0x1fff7a14);
   cpuId[2] = *(uint32_t *)(0x1fff7a18);
-
+    
+  macCode = (cpuId[0] >> 1) + (cpuId[1] >> 2) + (cpuId[2] >> 3);
+    
   defaultInfo.mac[2] = (macCode & 0x000000FF);
   defaultInfo.mac[3] = (macCode & 0x0000FF00) >> 8;
   defaultInfo.mac[4] = (macCode & 0x00FF0000) >> 16;
   defaultInfo.mac[5] = (macCode & 0xFF000000) >> 24;
 	
-  if (at24_isConnected())
+	
+	if (at24_isConnected())
   {
-    at24_read(0, (uint8_t *)_get, sizeof(wiz_NetInfo), 100);
+    at24_read(0x00, (uint8_t *)&_sendinfo, sizeof(defaultInfo), 100);
+	
+		if ((_sendinfo.ip[0] == 0xff) && (_sendinfo.ip[1] == 0xff) && (_sendinfo.ip[2] == 0xff) && (_sendinfo.ip[3] == 0xff))
+		{
+      memcpy(_get, &defaultInfo, sizeof(wiz_NetInfo));
+		}
+		else
+		{
+			for(int i=0;i<6;i++)
+			{
+					_sendinfo.mac[i] = defaultInfo.mac[i];
+			}
+			memcpy(_get, &_sendinfo, sizeof(wiz_NetInfo));
+		}
   }
-
-  if ((_get->mac[0] == 0xff) && (_get->mac[1] == 0xff) && (_get->mac[2] == 0xff) && (_get->mac[3] == 0xff) && (_get->mac[4] == 0xff) && (_get->mac[5] == 0xff))
-  {
-    memcpy(_get, &defaultInfo, sizeof(wiz_NetInfo));
-  }
+	else
+	{
+		memcpy(_get, &defaultInfo, sizeof(wiz_NetInfo));
+	}
 }
 
 /**
