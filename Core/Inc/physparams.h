@@ -94,11 +94,11 @@ const float thVelPidIband[2] =
 
 // * 轮电机速度环
 const float vVelPidP[2] = 
-    {4500.f, 4000.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+    {65000.f, 40000.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
 const float vVelPidI[2] = 
-    {2000.0f, 500.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+    {2000.0f, 2000.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
 const float vVelPidD[2] = 
-    {800.0f, 500.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+    {1000.0f, 1200.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
 const float vVelPidIband[2] = 
     {2000.0f, 2000.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
 
@@ -129,7 +129,7 @@ const double caliAngle_mech[6] = {
 
 // ! 机构电机的安装方向
 const float wheelDir[6] = {
-    -1.f, -1.f, -1.f, 1.f, -1.f, 1.f}; // 轮电机旋转方向与数学定义的关系 usedMotors[0]
+    1.f, -1.f, -1.f, 1.f, -1.f, 1.f}; // 轮电机旋转方向与数学定义的关系 usedMotors[0]
 const float steerDir[6] = {
     1.f, 1.f, 1.f, 1.f, 1.f, 1.f}; // 舵向电机旋转方向与数学定义的关系 usedMotors[1]
 const float mechDir[6] = {

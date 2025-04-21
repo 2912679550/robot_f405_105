@@ -146,11 +146,14 @@ namespace TskSteerBoard
                     if(usedMotors[1].cali_flag == true){
                         // 只有经过标定后，机器人才响应接收到的舵轮方向与舵轮速度指令
                         boardVal_->state = steerState::NORMAL;
-                        usedMotors[0].set_tar(PID_MODE::PID_MODE_VELOCITY, saturate(boardCmd_->dr1_tar_vel, maxVel, -maxVel)); 
                         // * 舵电机目标值限位
                         usedMotors[1].set_tar(PID_MODE::PID_MODE_POSITION, saturate(boardCmd_->dr2_tar_pos, steerDirRange[1], steerDirRange[0])); // 舵电机位置环的输入值，配置舵电机角度
-                        // dr2_delta_p = cacul_ppi_angle(saturate(boardCmd_->dr2_tar_pos, PI, -PI), usedMotors[1].pos_current); // rad
-                        // usedMotors[1].set_delta(PID_MODE::PID_MODE_POSITION, dr2_delta_p); // 这里的dr2_tar_pos是电机位置环的输入值，配置舵电机角度
+                        if( ABSF(usedMotors[1].pos_current - boardCmd_->dr2_tar_pos) < 0.1f ){
+                            // 此时舵电机接近到位，可以开启轮电机
+                            usedMotors[0].set_tar(PID_MODE::PID_MODE_VELOCITY, saturate(boardCmd_->dr1_tar_vel, maxVel, -maxVel)); 
+                        }else{
+                            usedMotors[0].set_tar(PID_MODE::PID_MODE_VELOCITY, 0.f); // 轮电机锁死
+                        }
                     }
                     break;
                 case steerState::STOP:
