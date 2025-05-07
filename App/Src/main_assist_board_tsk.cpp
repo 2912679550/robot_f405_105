@@ -189,7 +189,7 @@ namespace TskSteerBoard
             boardVal_->real_spring1 = 10.f;
             boardVal_->real_spring2 = 11.f;
         #else
-            boardVal_->dr1_real_vel = usedMotors[0].vel_current;
+            boardVal_->dr1_real_vel = usedMotors[0].cur_tar;    // 用于在上位机监控当前轮电机电流
             boardVal_->dr1_tar_vel  = usedMotors[0].vel_tar;
             boardVal_->dr2_real_pos = usedMotors[1].pos_current;
             boardVal_->dr2_tar_pos  = usedMotors[1].pos_tar;
