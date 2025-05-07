@@ -989,7 +989,7 @@
       <GroupNumber>7</GroupNumber>
       <FileNumber>49</FileNumber>
       <FileType>8</FileType>
-      <tvExp>0</tvExp>
+      <tvExp>1</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
       <PathWithFileName>..\App\Src\push_board_tsk.cpp</PathWithFileName>

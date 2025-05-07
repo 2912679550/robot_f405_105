@@ -57,6 +57,7 @@ DMA_HandleTypeDef hdma_spi1_tx;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_rx;
@@ -135,7 +136,7 @@ int main(void)
   MX_I2C2_Init();
   MX_SPI1_Init();
   MX_TIM1_Init();
-  MX_TIM3_Init();
+    //   MX_TIM3_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 

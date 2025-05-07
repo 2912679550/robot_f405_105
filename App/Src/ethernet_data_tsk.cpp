@@ -148,12 +148,19 @@ namespace TskEth
     const int tskStkSize = 512; // 512
     uint8_t type = BORAD_TYPE::idle;
 
+    // * 用于主、辅助控制板的消息容器与收发队列
     MAIN_ASSIST_CMD *mainAssistCmd = nullptr; // 用于控制辅助驱动轮的命令
     MAIN_ASSIST_VAL *mainAssistVal = nullptr; // 用于反馈辅助驱动轮的状态
-
     QueueHandle_t mainAssistCmdQueue; // 用于缓存解包好的主驱动轮和辅助驱动轮控制指令
     QueueHandle_t mainAssistValQueue; // 用于缓存等待打包的主驱动轮和辅助驱动轮反馈值
 
+    // * 用于推杆控制板的消息容器与收发队列 
+    PUSH_CMD *pushCmd = nullptr; // 用于控制推杆的命令
+    PUSH_VAL *pushVal = nullptr; // 用于反馈推杆的状态
+    QueueHandle_t pushCmdQueue; // 用于缓存解包好的推杆控制指令
+    QueueHandle_t pushValQueue; // 用于缓存等待打包的推杆反馈值
+
+    // * 与TCP任务的通讯队列
     QueueHandle_t rawDataQueue;
     QueueHandle_t sendDataQueue;
 
@@ -182,7 +189,17 @@ namespace TskEth
                         print((char *)("steerCmd send error\r\n"));
                     }
                 }else if (type == BORAD_TYPE::PUSH_BOARD){
-
+                    void *p = pushCmd;
+                    unpack_to_struct(   (char *)rxDealBuf, &p, PUSH_CMD_NAME,
+                                        (const char *)PUSH_CMD_TYPE_RECORD, PUSH_CMD_MEMBER_NUM);
+                    if (pdFAIL == xQueueOverwrite(pushCmdQueue, pushCmd))
+                    {
+                        print((char *)("pushCmd send error\r\n"));
+                    }
+                }
+                else
+                {
+                    // TODO 其他类型的控制板
                 }
             }
 
@@ -196,6 +213,16 @@ namespace TskEth
                 // * pack_struct函数的作用是将结构体的数据打包成一个字符串格式的字节数组，以便于传输或存储。
                 // * 输入参数： 
                 pack_struct(p, MAIN_ASSIST_VAL_NAME, (const char *)MAIN_ASSIST_VAL_TYPE_RECORD, MAIN_ASSIST_VAL_MEMBER_NUM, 0);
+            }
+            else if(type == BORAD_TYPE::PUSH_BOARD)
+            {
+                xQueueReceive(pushValQueue, pushVal, 0);
+                void *p = pushVal;
+                pack_struct(p, PUSH_VAL_NAME, (const char *)PUSH_VAL_TYPE_RECORD, PUSH_VAL_MEMBER_NUM, 0);
+            }
+            else
+            {
+                // TODO 其他类型的控制板
             }
             // txDealBuf[LEN_IDX] = cur_prefix;
             xQueueSend(sendDataQueue, txDealBuf, 1);
@@ -221,6 +248,20 @@ namespace TskEth
 
             mainAssistValQueue = xQueueCreate(1, sizeof(MAIN_ASSIST_VAL));
             configASSERT(mainAssistValQueue);
+        }
+        else if(type == BORAD_TYPE::PUSH_BOARD){
+            pushCmd = (PUSH_CMD *)pvPortMalloc(sizeof(PUSH_CMD));
+            if (pushCmd == nullptr)
+                return;
+            pushVal = (PUSH_VAL *)pvPortMalloc(sizeof(PUSH_VAL));
+            if (pushVal == nullptr)
+                return;
+
+            pushCmdQueue = xQueueCreate(1, sizeof(PUSH_CMD));
+            configASSERT(pushCmdQueue);
+
+            pushValQueue = xQueueCreate(1, sizeof(PUSH_VAL));
+            configASSERT(pushValQueue);
         }
 
 

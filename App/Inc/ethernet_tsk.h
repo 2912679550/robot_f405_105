@@ -69,6 +69,20 @@ const char MAIN_ASSIST_VAL_TYPE_RECORD[12] = {1,
                                             2, 2, 2};
 const char MAIN_ASSIST_VAL_MEMBER_NUM = 12;
 
+// * 推杆控制板的控制指令
+const char PUSH_CMD_NAME[3][13] = {
+    "f_length",
+    "b_length",
+    "m_length"};
+const char PUSH_CMD_TYPE_RECORD[3] = {2, 2, 2};
+const char PUSH_CMD_MEMBER_NUM = 3;
+// * 推杆控制板的反馈值
+const char PUSH_VAL_NAME[3][13] = {
+    "f_length",
+    "b_length",
+    "m_length"};
+const char PUSH_VAL_TYPE_RECORD[3] = {2, 2, 2};
+const char PUSH_VAL_MEMBER_NUM = 3;
 /*
  *  Steer cmd val
  */
@@ -94,11 +108,14 @@ namespace TskEth
     extern uint8_t type;
     // extern QueueHandle_t steerCmdQueue;
     // extern QueueHandle_t steerValQueue;
-
+    //* 用于主、辅助控制板
     extern QueueHandle_t mainAssistCmdQueue; // 用于缓存解包好的主驱动轮和辅助驱动轮控制指令
     extern QueueHandle_t mainAssistValQueue; // 用于缓存等待打包的主驱动轮和辅助驱动轮反馈值
+    // * 用于推杆控制板
+    extern QueueHandle_t pushCmdQueue; // 用于缓存解包好的推杆控制指令
+    extern QueueHandle_t pushValQueue; // 用于缓存等待打包的推杆反馈值
 
- 
+    // * 用于接收数据的队列   
     extern QueueHandle_t  rawDataQueue;     // 网络接收到，等待解包的数据流
     extern QueueHandle_t  sendDataQueue;    // 已经打包好，等待网络发送的数据流
     void Init();

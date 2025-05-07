@@ -109,6 +109,18 @@ extern "C"
         float real_spring2; // 0~2, 0:stop 1:left 2:right
     } MAIN_ASSIST_VAL;
 
+    typedef struct{
+        float tar_length_f; // 前侧推杆的期望长度
+        float tar_length_m; // 中间推杆的期望长度
+        float tar_length_b; // 后侧推杆的期望长度
+    } PUSH_CMD;
+
+    typedef struct{
+        float cur_length_f; // 前侧推杆的实际长度
+        float cur_length_m; // 中间推杆的实际长度
+        float cur_length_b; // 后侧推杆的实际长度
+    } PUSH_VAL;
+
     // * 主驱动轮与辅助驱动轮控制板的机构电机
     // typedef struct
     // {
@@ -196,6 +208,7 @@ extern "C"
     extern DMA_HandleTypeDef hdma_adc1;
     extern TIM_HandleTypeDef htim1;
     extern TIM_HandleTypeDef htim3;
+    extern TIM_HandleTypeDef htim4;
     extern I2C_HandleTypeDef hi2c2;
     extern SPI_HandleTypeDef hspi1;
     extern DMA_HandleTypeDef hdma_spi1_rx;

@@ -362,6 +362,7 @@ void StartDefaultTask(void *argument)
                 TskMotorPID::Init();
             }
             else if(cmdEthInfo.type == BORAD_TYPE::PUSH_BOARD){
+                TskPushBoard::TCP_IP_ID = cmdEthInfo.ip[3] - 201;
                 TskPushBoard::Init();
             }
             // check task to ethernet 5001 recv task, DO NOT deal uart cmd!
