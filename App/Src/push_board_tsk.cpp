@@ -4,9 +4,10 @@
 #include "public_func.h"
 
 
-#define push_debug 0
+#define push_debug 1
 bool pcOnline_ = false; // 连接上PC的标志位
 float debugTarLength[3] = {30.0f, 30.0f, 20.0f}; // 用于调试的目标长度,便于在debug中直接控制
+int tar_count[3] = {0, 0, 0}; // 用于虚拟PWM的计数器
 
 namespace TskPushBoard
 {
@@ -96,10 +97,17 @@ namespace TskPushBoard
         if(length < PUSH_LENGTH_MIN[push_id]) length = PUSH_LENGTH_MIN[push_id]; // 小于0，设置为0
         if(length > PUSH_LENGTH_MAX[push_id]) length = PUSH_LENGTH_MAX[push_id]; // 大于最大值，设置为最大值
         float pwm_value = (length / PUSH_LENGTH[push_id]) * 1000.0f + 1000.0f; // 计算对应的PWM值
+        #ifndef USE_VISUAL_PWM
         __HAL_TIM_SET_COMPARE(allTims[push_id], allChannels[push_id], (uint32_t)pwm_value); // 设置PWM值
+        #else
+        // 使用模拟PWM输出，根据长度以及定义的分辨率宏确定目标定时器的计数值
+        // 此时pwm_value的单位为us
+        tar_count[push_id] = int(pwm_value / VISUAL_TIM_PERIOD);
+    #endif
     }
 
     void push_io_init(){
+        #ifndef USE_VISUAL_PWM
         // 用于初始化推杆PWM输出控制器的端口
         // 由于IO数量不足，目前打算复用串口的两个引脚作为推杆的PWM输出控制器
         // 前： PB6 对应串口的TXD引脚 TIM4_CH1
@@ -156,5 +164,49 @@ namespace TskPushBoard
         HAL_TIM_PWM_ConfigChannel(f_push_tim, &sConfigOC, b_push_channel); // 配置定时器4的输出通道TIM4_CH2
         HAL_TIM_PWM_Start(f_push_tim, f_push_channel); // 启动定时器4的PWM输出TIM4_CH1
         HAL_TIM_PWM_Start(f_push_tim, b_push_channel); // 启动定时器4的PWM输出TIM4_CH2
+        #else
+        // 使用PC0、PC1和PC2模拟前、后和中间推杆的PWM输出
+        // * 引脚设置 
+        GPIO_InitTypeDef GPIO_InitStruct = {0};
+        __HAL_RCC_GPIOC_CLK_ENABLE(); // 使能GPIOC时钟
+        GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2; // PC0、PC1和PC2引脚
+        GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP; // 设置为推挽输出模式
+        GPIO_InitStruct.Pull = GPIO_PULLUP; // 无上下拉电阻
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // 高速模式
+        HAL_GPIO_Init(GPIOC, &GPIO_InitStruct); // 初始化PC0、PC1和PC2引脚
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2, GPIO_PIN_RESET); // 初始化为低电平
+
+        // * 配置定时器TIM3，并设置对照VISUAL_TIM_PERIOD的中断
+        __HAL_RCC_TIM3_CLK_ENABLE(); // 使能TIM3时钟
+        htim3.Instance = TIM3;
+        htim3.Init.Prescaler = 84 - 1; // 预分频器设置为84-1，定时器时钟频率为84MHz
+        htim3.Init.CounterMode = TIM_COUNTERMODE_UP; // 计数器向上计数
+        htim3.Init.Period = int(VISUAL_TIM_PERIOD); // 自动重装载寄存器值
+        htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1; // 时钟分频器设置为1
+        htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE; // 自动重装载预加载使能
+        HAL_TIM_Base_Init(&htim3); // 初始化定时器3
+        HAL_TIM_Base_Start_IT(&htim3); // 启动定时器3的中断
+        HAL_NVIC_SetPriority(TIM3_IRQn, 0, 0); // 设置定时器3中断优先级
+        HAL_NVIC_EnableIRQ(TIM3_IRQn); // 使能定时器3中断
+        #endif
     }
 }
+
+void TIM3_IRQHandler(void){
+    // static int pwm_count = 0;
+    // static int pwm_count_max = int(1.0 / VISUAL_TIM_HZ * 1000.0 * 1000.0 / VISUAL_TIM_PERIOD);
+    // pwm_count++;
+
+    // if(pwm_count == pwm_count_max){
+    //     pwm_count = 0;
+    //     return;
+    // }
+
+    // for (int i = 0; i < 3;i++){
+    //     if(pwm_count <= tar_count[i])
+    //         HAL_GPIO_WritePin(GPIOC, PUSH_PINS[i], GPIO_PIN_SET);
+    //     else
+    //         HAL_GPIO_WritePin(GPIOC, PUSH_PINS[i], GPIO_PIN_RESET);
+    // }
+}
+

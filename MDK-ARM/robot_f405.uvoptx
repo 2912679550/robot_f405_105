@@ -230,6 +230,11 @@
           <WinNumber>1</WinNumber>
           <ItemText>debugDefault</ItemText>
         </Ww>
+        <Ww>
+          <count>14</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>Instance</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>

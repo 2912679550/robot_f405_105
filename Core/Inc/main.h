@@ -47,6 +47,13 @@ extern "C"
 
     /* Exported types ------------------------------------------------------------*/
     /* USER CODE BEGIN ET */
+    // ! used for visual pwm
+    extern int tar_count[3];
+    static uint16_t PUSH_PINS[3] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2};
+    #define VISUAL_TIM_HZ 100.0 // 通过IO模拟的PWM频率，单位Hz
+    #define VISUAL_TIM_PERIOD 10.0 // 用于控制模拟IO的定时器中断，单位为us
+    // ! used for visual pwm
+
     typedef enum
     {
         idle,         // 0 空闲
@@ -122,17 +129,7 @@ extern "C"
     } PUSH_VAL;
 
     // * 主驱动轮与辅助驱动轮控制板的机构电机
-    // typedef struct
-    // {
-    //     PID_MODE ctrl_mode;
-    //     float pos_tar;      // 目标位置
-    //     float vel_tar;      // 这里可以直接设置为机构的目标速度
-    //     float cur_tar;      // 目标电流
 
-    //     float pos_current;   // 当前位置
-    //     float vel_current;   // 当前位置的速度
-    //     float cur_current;   // 当前位置的电流
-    // } PID_MOTOR_CTRL;
 
     typedef struct
     {
