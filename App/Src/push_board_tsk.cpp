@@ -5,8 +5,8 @@
 
 
 #define push_debug 0
-bool pcOnline = false; // 连接上PC的标志位
-float debugTarLength[3] = {0.0f, 0.0f, 0.0f}; // 用于调试的目标长度,便于在debug中直接控制
+bool pcOnline_ = false; // 连接上PC的标志位
+float debugTarLength[3] = {30.0f, 30.0f, 20.0f}; // 用于调试的目标长度,便于在debug中直接控制
 
 namespace TskPushBoard
 {
@@ -33,9 +33,9 @@ namespace TskPushBoard
         if (pushCmd_ == nullptr)
             return;
         // 给一个命令的初始值
-        pushCmd_->tar_length_f = 0.f; // 前侧推杆的目标长度
-        pushCmd_->tar_length_b = 0.f; // 后侧推杆的目标长度
-        pushCmd_->tar_length_m = 0.f; // 中间推杆的目标长度
+        pushCmd_->tar_length_f = 30.f; // 前侧推杆的目标长度
+        pushCmd_->tar_length_b = 30.f; // 后侧推杆的目标长度
+        pushCmd_->tar_length_m = 20.f; // 中间推杆的目标长度
 
         pushVal_ = (PUSH_VAL *)pvPortMalloc(sizeof(PUSH_VAL));
         if (pushVal_ == nullptr)
@@ -58,7 +58,7 @@ namespace TskPushBoard
             rtn = xQueueReceive(TskEth::pushCmdQueue, pushCmd_, 0);
             if (rtn == pdPASS)
             {
-                pcOnline = true; // 连接上PC的标志位
+                pcOnline_ = true; // 连接上PC的标志位
             }
             #if push_debug
             // * 在Debug模式中直接使用数组来控制推杆长度，便于调试
@@ -66,8 +66,12 @@ namespace TskPushBoard
             set_push_length(debugTarLength[1], PUSH_ID::BACK);  // 设置后侧推杆的长度
             set_push_length(debugTarLength[2], PUSH_ID::MIDDLE); // 设置中间推杆的长度
             #else
-            if (pcOnline == false)
+            if (pcOnline_ == false){
+                set_push_length(debugTarLength[0], PUSH_ID::FRONT); // 设置前侧推杆的长度
+                set_push_length(debugTarLength[1], PUSH_ID::BACK);  // 设置后侧推杆的长度
+                set_push_length(debugTarLength[2], PUSH_ID::MIDDLE); // 设置中间推杆的长度
                 continue;
+            }
             else{
                 // * 设置推杆的长度
                 set_push_length(pushCmd_->tar_length_f, PUSH_ID::FRONT); // 设置前侧推杆的长度
@@ -89,7 +93,7 @@ namespace TskPushBoard
         // 1. 计算对应的PWM值
         // 2. 设置PWM值
         if(push_id > PUSH_ID::MIDDLE) return; // 超出范围，直接返回
-        if(length < 0) length = 0.0; // 小于0，设置为0
+        if(length < PUSH_LENGTH_MIN[push_id]) length = PUSH_LENGTH_MIN[push_id]; // 小于0，设置为0
         if(length > PUSH_LENGTH_MAX[push_id]) length = PUSH_LENGTH_MAX[push_id]; // 大于最大值，设置为最大值
         float pwm_value = (length / PUSH_LENGTH[push_id]) * 1000.0f + 1000.0f; // 计算对应的PWM值
         __HAL_TIM_SET_COMPARE(allTims[push_id], allChannels[push_id], (uint32_t)pwm_value); // 设置PWM值
@@ -106,7 +110,7 @@ namespace TskPushBoard
         __HAL_RCC_GPIOB_CLK_ENABLE(); // 使能GPIOB时钟
         GPIO_InitStruct.Pin = GPIO_PIN_0; // PB0引脚
         GPIO_InitStruct.Mode = GPIO_MODE_AF_PP; // 设置为复用推挽输出模式
-        GPIO_InitStruct.Pull = GPIO_NOPULL; // 无上下拉电阻
+        GPIO_InitStruct.Pull = GPIO_PULLUP; // 无上下拉电阻
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // 高速模式
         GPIO_InitStruct.Alternate = GPIO_AF2_TIM3; // 复用为TIM3_CH3
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct); // 初始化PB0引脚
@@ -122,7 +126,7 @@ namespace TskPushBoard
         htim3.Instance = TIM3;
         htim3.Init.Prescaler = 84-1;                    // 预分频器设置为84-1，定时器时钟频率为84MHz
         htim3.Init.CounterMode = TIM_COUNTERMODE_UP;    // 计数器向上计数
-        htim3.Init.Period = 20000 - 1;                      // 自动重装载寄存器值，定时器计数到20000后重新开始计数
+        htim3.Init.Period =  int(1 / TIM_HZ * 1000.0 * 1000.0 - 1); // 自动重装载寄存器值
         htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1; // 时钟分频器设置为1
         htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE; // 自动重装载预加载使能
         HAL_TIM_PWM_Init(m_push_tim); // 初始化定时器3
@@ -139,7 +143,7 @@ namespace TskPushBoard
         htim4.Instance = TIM4;
         htim4.Init.Prescaler = 84 - 1;
         htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-        htim4.Init.Period = 20000 - 1; // 自动重装载寄存器值
+        htim4.Init.Period =int( 1 / TIM_HZ * 1000.0 * 1000.0 - 1 ); // 自动重装载寄存器值
         htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
         htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE; // 自动重装载预加载使能
         HAL_TIM_PWM_Init(f_push_tim); // 初始化定时器4
@@ -153,5 +157,4 @@ namespace TskPushBoard
         HAL_TIM_PWM_Start(f_push_tim, f_push_channel); // 启动定时器4的PWM输出TIM4_CH1
         HAL_TIM_PWM_Start(f_push_tim, b_push_channel); // 启动定时器4的PWM输出TIM4_CH2
     }
-
 }
