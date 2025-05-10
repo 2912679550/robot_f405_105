@@ -30,8 +30,8 @@ typedef enum
 
 #define USE_VISUAL_PWM 0 // 是否使用模拟PWM输出
 static float PUSH_LENGTH[3] = {100.0 , 100.0 , 50.0};       // 推杆的控制长度，单位mm
-static float PUSH_LENGTH_MAX[3] = {85.0 , 85.0 , 45.0};   // 推杆的理论工作最大长度，单位mm，用于保护机构
-static float PUSH_LENGTH_MIN[3] = {0.0 , 0.0 , 0.0};     // 推杆的理论工作最小长度，单位mm，用于保护机构
+static float PUSH_LENGTH_MAX[3] = {80.0 , 80.0 , 45.0};   // 推杆的理论工作最大长度，单位mm，用于保护机构
+static float PUSH_LENGTH_MIN[3] = {10.0 , 10.0 , 0.0};     // 推杆的理论工作最小长度，单位mm，用于保护机构
 
 namespace TskPushBoard
 {

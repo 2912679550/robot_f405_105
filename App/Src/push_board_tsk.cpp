@@ -4,9 +4,9 @@
 #include "public_func.h"
 
 
-#define push_debug 1
+#define push_debug 0
 bool pcOnline_ = false; // 连接上PC的标志位
-float debugTarLength[3] = {30.0f, 30.0f, 20.0f}; // 用于调试的目标长度,便于在debug中直接控制
+float debugTarLength[3] = {20.0f, 20.0f, 15.0f}; // 用于调试的目标长度,便于在debug中直接控制
 int tar_count[3] = {0, 0, 0}; // 用于虚拟PWM的计数器
 
 namespace TskPushBoard
@@ -34,9 +34,9 @@ namespace TskPushBoard
         if (pushCmd_ == nullptr)
             return;
         // 给一个命令的初始值
-        pushCmd_->tar_length_f = 30.f; // 前侧推杆的目标长度
-        pushCmd_->tar_length_b = 30.f; // 后侧推杆的目标长度
-        pushCmd_->tar_length_m = 20.f; // 中间推杆的目标长度
+        pushCmd_->tar_length_f = 20.f; // 前侧推杆的目标长度
+        pushCmd_->tar_length_b = 20.f; // 后侧推杆的目标长度
+        pushCmd_->tar_length_m = 15.f; // 中间推杆的目标长度
 
         pushVal_ = (PUSH_VAL *)pvPortMalloc(sizeof(PUSH_VAL));
         if (pushVal_ == nullptr)
@@ -80,9 +80,9 @@ namespace TskPushBoard
                 set_push_length(pushCmd_->tar_length_m, PUSH_ID::MIDDLE); // 设置中间推杆的长度
             }
             // * 回传推杆当前长度
-            pushVal_->cur_length_b = 0.0f;
-            pushVal_->cur_length_f = 0.0f;
-            pushVal_->cur_length_m = 0.0f;
+            pushVal_->cur_length_b = 1.0f;
+            pushVal_->cur_length_f = 2.0f;
+            pushVal_->cur_length_m = 3.0f;
             xQueueSend(TskEth::pushValQueue, pushVal_, 0); // 发送当前推杆的长度
             #endif
         }

@@ -118,14 +118,14 @@ extern "C"
 
     typedef struct{
         float tar_length_f; // 前侧推杆的期望长度
-        float tar_length_m; // 中间推杆的期望长度
         float tar_length_b; // 后侧推杆的期望长度
+        float tar_length_m; // 中间推杆的期望长度
     } PUSH_CMD;
 
     typedef struct{
         float cur_length_f; // 前侧推杆的实际长度
-        float cur_length_m; // 中间推杆的实际长度
         float cur_length_b; // 后侧推杆的实际长度
+        float cur_length_m; // 中间推杆的实际长度
     } PUSH_VAL;
 
     // * 主驱动轮与辅助驱动轮控制板的机构电机
