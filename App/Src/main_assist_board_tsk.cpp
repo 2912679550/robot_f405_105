@@ -221,31 +221,56 @@ namespace TskSteerBoard
         if(boardVal_->dr3_tar_spring > 10.0f){
             // 期望夹紧 , 夹紧的成功仅通过电机是否堵转来判断，并给一个较大的判断阈值
             // 夹紧成功就将电机失能，直到检测到弹簧的压缩量超出了阈值，再重新给夹紧失效，使得电机重新开始工作直到堵转
-            if( spring_tight_length_[0] - adcVal[0] < 10.0f && 
-                spring_tight_length_[1] - adcVal[1] < 10.0f &&
-                springTight == true){
+            // todo： 老版的通过电机堵转电流来判断夹紧是否成功的程序
+            // if( spring_tight_length_[0] - adcVal[0] < 10.0f && 
+            //     spring_tight_length_[1] - adcVal[1] < 10.0f &&
+            //     springTight == true){
 
-            }else{
+            // }else{
+            //     springTight = false; // 夹紧状态失效，重新开始夹紧
+            // }
+            // // 执行
+            // if(springTight == false){
+            //     usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, 15.0f); // 夹紧
+            //     if(
+            //         // 夹紧电机堵转或者到达传感器阈值范围之内
+            //         usedMotors[2].work_log == WORKING_LOG::BLOCK ||
+            //         (
+            //             adcVal[0] >= adc_spring_val[index][0] && 
+            //             adcVal[1] >= adc_spring_val[index][1]
+            //         )
+            //     ){
+            //         springTight = true;
+            //         // 存储当前加紧值
+            //         spring_tight_length_[0] = adcVal[0]; // 左右测距传感器测量得到的弹簧长度
+            //         spring_tight_length_[1] = adcVal[1]; // 左右测距传感器测量得到的弹簧长度
+            //     }
+            // }else{
+            //     usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 夹紧完成，电机失能
+            // }
+            // TODO： 新版的通过直接测量弹簧长度来控制夹紧过程
+            boardVal_->dr3_tar_spring = saturate(boardVal_->dr3_tar_spring , spring_length_limit[1], spring_length_limit[0]); // 限制弹簧长度的范围
+            // * 这部分逻辑用来判断夹紧成功后是否夹紧失效了
+            if( (adcVal[0] - boardVal_->dr3_tar_spring > 1.0 ||
+                 adcVal[1] - boardVal_->dr3_tar_spring > 1.0) &&
+                springTight == true){
+                // 夹紧状态失效，重新开始夹紧
                 springTight = false; // 夹紧状态失效，重新开始夹紧
             }
-            // 执行
             if(springTight == false){
                 usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, 15.0f); // 夹紧
                 if(
-                    // 夹紧电机堵转或者到达传感器阈值范围之内
                     usedMotors[2].work_log == WORKING_LOG::BLOCK ||
                     (
-                        adcVal[0] >= adc_spring_val[index][0] && 
-                        adcVal[1] >= adc_spring_val[index][1]
+                        // 两遍的弹簧长度都小于等与目标值，说明已经被压缩到位
+                        adcVal[0] <= boardVal_->dr3_tar_spring &&
+                        adcVal[1] <= boardVal_->dr3_tar_spring
                     )
                 ){
-                    springTight = true;
-                    // 存储当前加紧值
-                    spring_tight_length_[0] = adcVal[0]; // 左右测距传感器测量得到的弹簧长度
-                    spring_tight_length_[1] = adcVal[1]; // 左右测距传感器测量得到的弹簧长度
+                    springTight = true; // 给出夹紧成功的标志，相比于原来，这里就不再存储夹紧长度了
                 }
             }else{
-                usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 夹紧完成，电机失能
+                 usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 夹紧完成，电机失能
             }
         }else{
             // 期望松开，松开的指标设计为弹簧的长度达到最大值或者出发了限位传感器报警
@@ -256,11 +281,12 @@ namespace TskSteerBoard
                 // 触发松开完成标志，失能电机
                 // debug 对应的传感器在有金属杆时为0，没金属杆时为1
                 usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 夹紧完成，电机失能
+                springTight = false; // 夹紧状态失效
             }
         }
 
     }
- 
+
     void assist_board_sub_tsk(){
         // * 首先是按照传感器信息获取当前电机的位置值
         HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adcOri, 3); // 启动ADC转换

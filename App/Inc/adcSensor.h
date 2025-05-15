@@ -43,13 +43,18 @@ const float adc_angle_coeff[4] = {
 */
 
 const float adc_spring_coeff[2][2] = {
-    {1.0f, 1.0f}, // 前左、前右弹簧传感器的系数
-    {1.0f, 1.0f}  // 后左、后右弹簧传感器的系数
+    {-0.0036f, -0.0036f}, // 前左、前右弹簧传感器的系数
+    {-0.0035f, -0.0034f}  // 后左、后右弹簧传感器的系数
 };
 
 const float adc_spring_offset[2][2] = {
-    {0.0f, 0.0f}, // 前左、前右弹簧传感器的偏移量
-    {0.0f, 0.0f}  // 后左、后右弹簧传感器的偏移量
+    {58.951f, 57.9f}, // 前左、前右弹簧传感器的偏移量
+    {56.855f, 57.202f}  // 后左、后右弹簧传感器的偏移量
+};
+
+const float spring_length_limit[2] = {
+    52.0f, // 弹簧最短长度
+    58.0f  // 弹簧原长
 };
 
 const float adc_angle_offset[4] = {
