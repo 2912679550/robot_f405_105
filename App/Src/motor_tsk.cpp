@@ -182,7 +182,7 @@ namespace TskMotorPID
         else if(boradType_ == BORAD_TYPE::MAIN_BOARD){
             // 配置夹紧电机的堵转电流
             dr3PosPID_ = nullptr; // 主控板的机构电机不需要位置环
-            usedMotors[2].block_cur = 5.0f;
+            usedMotors[2].block_cur = 6.0f;
         }
         
         // * 装载到电机类中

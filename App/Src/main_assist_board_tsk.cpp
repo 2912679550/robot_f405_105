@@ -274,7 +274,6 @@ namespace TskSteerBoard
             }
         }else{
             // 期望松开，松开的指标设计为弹簧的长度达到最大值或者出发了限位传感器报警
-            usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, -15.0f); // 松开 15为测试的速度
             debug = HAL_GPIO_ReadPin(LaserSensor0_GPIO_Port, LaserSensor0_Pin);
             if (debug == 1)
             {
@@ -282,6 +281,9 @@ namespace TskSteerBoard
                 // debug 对应的传感器在有金属杆时为0，没金属杆时为1
                 usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE; // 夹紧完成，电机失能
                 springTight = false; // 夹紧状态失效
+            }else{
+                // 没有触发松开完成标志
+                usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, -15.0f); // 松开
             }
         }
 
