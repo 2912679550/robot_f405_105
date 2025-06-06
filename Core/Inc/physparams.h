@@ -94,13 +94,13 @@ const float thVelPidIband[2] =
 
 // * 轮电机速度环
 const float vVelPidP[2] = 
-    {65000.f, 40000.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+    {70000.f, 45000.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
 const float vVelPidI[2] = 
-    {2000.0f, 2000.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+    {10000.0f, 8000.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
 const float vVelPidD[2] = 
     {1000.0f, 1200.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
 const float vVelPidIband[2] = 
-    {2000.0f, 2000.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+    {3000.0f, 300.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
 
 // ! 机构执行电机参数
 // * 机构电机位置环
@@ -150,4 +150,4 @@ const float mechAngleRange[2] = {
 const float mechSpringMin = 30.0f;  // 期望夹紧弹簧达到预期夹紧力时的最小长度
 const float mechSpringMax = 50.0f;  // 期望夹紧弹簧达到预期夹紧力时的最大长度
 
-#endif /* PHYS_PARAMS_H_ */
+#endif /* PHYS_PARAMS_H_ */ 

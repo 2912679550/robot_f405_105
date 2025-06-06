@@ -114,10 +114,6 @@ namespace TskMotorPID
         dr2VelPID_ = (PID_PARAM *)pvPortMalloc(sizeof(PID_PARAM));
         // 按照控制板类型直接读读取在数组中的参数
         int index = boradType_ - 1;
-        // 结构参数
-        wheelRatio_ = wheelRatio[index];
-        steerRatio_ = steerRatio[index];
-        wheelR_ = wheelR[index];
         // dr1 vel loop
         dr1VelPID_->p = vVelPidP[index];
         dr1VelPID_->i = vVelPidI[index];
@@ -192,6 +188,12 @@ namespace TskMotorPID
     }
     
     void load_motor_params_(){
+        int index = boradType_ - 1;
+        // 结构参数     
+        wheelRatio_ = wheelRatio[index];
+        steerRatio_ = steerRatio[index];
+        wheelR_ = wheelR[index];
+
         usedMotors[0].can2cur = C610ICoeff; // dr1 轮电机
         usedMotors[0].can2vel = wheelR_ / wheelRatio_ / toRPM; // dr1 轮电机,表示的是轮子的线速度
         usedMotors[0].can2pos = 1 / wheelRatio_ / 8192.0f * 2.f * PI; // dr1 轮电机,单位为rad

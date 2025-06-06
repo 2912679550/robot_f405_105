@@ -343,18 +343,18 @@ void StartDefaultTask(void *argument)
             // * 至此已经完成板子自身IP等的设置，开始根据板子类型创建对应的单线程任务
             if (cmdEthInfo.type == BORAD_TYPE::MAIN_BOARD)
             {
-                TskSteerBoard::boradType_ = BORAD_TYPE::MAIN_BOARD;
-                TskSteerBoard::TCP_IP_ID = cmdEthInfo.ip[3] - 201;
-                TskSteerBoard::Init();
+                TskMainAssistBoard::boradType_ = BORAD_TYPE::MAIN_BOARD;
+                TskMainAssistBoard::TCP_IP_ID = cmdEthInfo.ip[3] - 201;
+                TskMainAssistBoard::Init();
                 // * 创建舵轮电机控制任务
                 TskMotorPID::boradType_ = BORAD_TYPE::MAIN_BOARD;
                 TskMotorPID::TCP_IP_ID = cmdEthInfo.ip[3] - 201;
                 TskMotorPID::Init();
             }
             else if(cmdEthInfo.type == BORAD_TYPE::ASSIST_BOARD){
-                TskSteerBoard::boradType_ = BORAD_TYPE::ASSIST_BOARD;
-                TskSteerBoard::TCP_IP_ID = cmdEthInfo.ip[3] - 201;
-                TskSteerBoard::Init();
+                TskMainAssistBoard::boradType_ = BORAD_TYPE::ASSIST_BOARD;
+                TskMainAssistBoard::TCP_IP_ID = cmdEthInfo.ip[3] - 201;
+                TskMainAssistBoard::Init();
 
                 // * 创建舵轮电机控制任务
                 TskMotorPID::boradType_ = BORAD_TYPE::ASSIST_BOARD;

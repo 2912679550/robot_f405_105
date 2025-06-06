@@ -45,8 +45,10 @@ typedef enum
 */
 // 依次为： 舵轮运行状态，舵轮目标速度(dr1)，舵轮目标位置(dr2),是否启用主丝杠夹紧(main,dr3),一臂二臂目标夹角(assist，dr3)
 const char MAIN_ASSIST_CMD_NAME[5][13] = {"state", 
-                                        "tar_v", "tar_p", 
-                                        "tar_angle", "tar_spring"};
+                                        "tar_v", 
+                                        "tar_p", 
+                                        "tar_angle", 
+                                        "tar_spring"};
 const char MAIN_ASSIST_CMD_TYPE_RECORD[5] = {1, 2, 2, 2, 2};
 const char MAIN_ASSIST_CMD_MEMBER_NUM = 5;
 
@@ -55,19 +57,28 @@ const char MAIN_ASSIST_CMD_MEMBER_NUM = 5;
 //                        舵轮目标位置(dr2)，舵轮实际位置(dr2)
 //                        两臂目标夹角，两臂实际夹角
 //                        主丝杠目标夹紧状态，主丝杠目前夹紧值（1左2右）
-const char MAIN_ASSIST_VAL_NAME[12][13] = { "state", 
-                                            "tar1_v", "real1_v", 
-                                            "tar2_v", "real2_v",
-                                            "tar_p", "real_p", 
-                                            "tar_angle","real_angle",
-                                            "tar_spring", "real_s1","real_s2"};
-const char MAIN_ASSIST_VAL_TYPE_RECORD[12] = {1, 
+const char MAIN_ASSIST_VAL_NAME[9][13] = { "state", 
+                                            "real1_v", 
+                                            "real2_v",
+                                            "real_p", 
+                                            "real_angle",
+                                            "real_s1",
+                                            "real_s2",
+                                            "odom_axis",
+                                            "odom_cir"
+                                            // "tar1_v", 
+                                            // "tar2_v", 
+                                            // "tar_p", 
+                                            // "tar_angle",
+                                            // "tar_spring", 
+                                        };
+const char MAIN_ASSIST_VAL_TYPE_RECORD[9] = {1, 
                                             2, 2,
                                             2, 2, 
                                             2, 2, 
                                             2, 2, 
-                                            2, 2, 2};
-const char MAIN_ASSIST_VAL_MEMBER_NUM = 12;
+                                            };
+const char MAIN_ASSIST_VAL_MEMBER_NUM = 9;
 
 // * 推杆控制板的控制指令
 const char PUSH_CMD_NAME[3][13] = {
@@ -83,19 +94,7 @@ const char PUSH_VAL_NAME[3][13] = {
     "m_length"};
 const char PUSH_VAL_TYPE_RECORD[3] = {2, 2, 2};
 const char PUSH_VAL_MEMBER_NUM = 3;
-/*
- *  Steer cmd val
- */
-const char SteerCmdName[5][13] = {"steer_state", "dr1_tar_v", "dr2_tar_p", "dr1_tar_i", "ts"};
-// 1-uint32_t; 2-float；3-uint64_t
-const char SteerCmdTypeRecord[5] = {1, 2, 2, 2, 3};
-const char SteerCmdMemberNum = 5;
 
-const char SteerValName[12][13] = {"steer_state", "dr1_tar_v", "dr1_real_v", "dr1_tar_i", "dr1_real_i", "dr2_tar_p",
-                                   "dr2_real_p", "dr2_tar_v", "dr2_real_v", "dr2_tar_i", "dr2_real_i", "ts"};
-// 1-uint32_t; 2-float；3-uint64_t
-const char SteerValTypeRecord[12] = {1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3};
-const char SteerValMemberNum = 12;
 
 typedef struct
 {

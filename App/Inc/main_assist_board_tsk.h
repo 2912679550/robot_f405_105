@@ -18,7 +18,9 @@ extern "C"
 #include "physparams.h"
 #include "public_func.h"
 
-namespace TskSteerBoard
+
+
+namespace TskMainAssistBoard
 {
     typedef enum
     {
@@ -38,6 +40,8 @@ namespace TskSteerBoard
     void Init();
     void load_settings_();
     void main_assist_board_task(void *pvParameters);
+    void odom_sub_task(); // 里程计自刷新任务，主要用于舵轮里程计的计算
+    void steer_control_sub_task();      // 舵轮控制任务，主要用于执行舵轮的状态机
     void main_board_sub_tsk();      // 主驱动轮子任务，主要用于夹紧丝杠的工作
     void assist_board_sub_tsk();    // 辅助驱动轮子任务，主要用于控制两臂家教的丝杠电机
 }; 

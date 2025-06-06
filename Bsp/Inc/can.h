@@ -59,7 +59,8 @@ extern "C"
     int32_t round_cnt;
     int32_t total_angle;
     uint32_t msg_cnt;
-  } moto_measure_t;
+
+} moto_measure_t;
 
   extern QueueHandle_t reset_flag;
   void CAN_Start_Trans(void);

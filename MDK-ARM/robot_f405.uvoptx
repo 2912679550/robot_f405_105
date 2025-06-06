@@ -198,7 +198,7 @@
         <Ww>
           <count>7</count>
           <WinNumber>1</WinNumber>
-          <ItemText>TskSteerBoard::boardCmd_</ItemText>
+          <ItemText>TskMainAssistBoard::boardCmd_</ItemText>
         </Ww>
         <Ww>
           <count>8</count>
@@ -290,12 +290,12 @@
         <Ww>
           <count>10</count>
           <WinNumber>2</WinNumber>
-          <ItemText>TskSteerBoard::boardCmd_</ItemText>
+          <ItemText>TskMainAssistBoard::boardCmd_</ItemText>
         </Ww>
         <Ww>
           <count>11</count>
           <WinNumber>2</WinNumber>
-          <ItemText>TskSteerBoard::boardVal_</ItemText>
+          <ItemText>TskMainAssistBoard::boardVal_</ItemText>
         </Ww>
         <Ww>
           <count>12</count>
