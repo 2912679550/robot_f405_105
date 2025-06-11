@@ -196,7 +196,8 @@ namespace TskMotorPID
 
         usedMotors[0].can2cur = C610ICoeff; // dr1 轮电机
         usedMotors[0].can2vel = wheelR_ / wheelRatio_ / toRPM; // dr1 轮电机,表示的是轮子的线速度
-        usedMotors[0].can2pos = 1 / wheelRatio_ / 8192.0f * 2.f * PI; // dr1 轮电机,单位为rad
+        usedMotors[0].can2pos = 1 / wheelRatio_ / 8192.0f * 2.f * PI * wheelR_; // dr1 轮电机,单位为m
+        // usedMotors[0].can2pos = 1 / wheelRatio_ / 8192.0f * 2.f * PI ; // dr1 轮电机,单位为m
 
         usedMotors[1].can2cur = C610ICoeff; // dr2 转向电机
         usedMotors[1].can2vel = 1 / steerRatio_ / toRPM; // dr2 转向电机，单位为rad/s

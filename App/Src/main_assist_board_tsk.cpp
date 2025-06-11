@@ -119,17 +119,7 @@ namespace TskMainAssistBoard
 #if main_assist_debug
             // 为了测试发送缺省值
             boardVal_->state = boardCmd_->state;
-            boardVal_->dr1_tar_vel  = 1.f;
-            boardVal_->dr1_real_vel = 2.f;
-            boardVal_->dr2_tar_vel  = 3.f;
-            boardVal_->dr2_real_vel = 4.f;
-            boardVal_->dr2_tar_pos  = 5.f;
-            boardVal_->dr2_real_pos = 6.f;
-            boardVal_->dr3_tar_angle = 7.f;
-            boardVal_->dr3_real_angle = 8.f;
-            boardVal_->dr3_tar_spring = 9.f;
-            boardVal_->real_spring1 = 10.f;
-            boardVal_->real_spring2 = 11.f;
+
 #else
             // 机构电机的数据已经在子任务中完成装填
             boardVal_->dr1_real_vel = usedMotors[0].vel_current;    // 用于在上位机监控当前轮电机电流
@@ -153,16 +143,16 @@ namespace TskMainAssistBoard
         }else{
             if(firstFlag == true){
                 firstFlag = false;
-                current_distance = usedMotors[0].pos_current;
+                current_distance = usedMotors[0].pos_current * usedMotors[0].mech_dir;
                 last_distance = current_distance; // 初始化上一次的距离
                 corr_axis = 0.0f; // 初始化轴向里程计
                 corr_cir = 0.0f; // 初始化周向里程计
             }else{
                 last_distance = current_distance; // 更新上一次的距离
-                current_distance = usedMotors[0].pos_current; // 获取当前的距离
+                current_distance = usedMotors[0].pos_current * usedMotors[0].mech_dir; // 获取当前的距离
                 float distance_diff = current_distance - last_distance; // 计算距离差
                 corr_axis += distance_diff * sin(usedMotors[1].pos_current); // 轴向里程计，假设舵轮的转向角度为0时，机器人沿着轴向前进
-                corr_cir += distance_diff * cos(usedMotors[1].pos_current); // 周向里程计，假设舵轮的转向角度为0时，机器人沿着周向前进
+                corr_cir  += distance_diff * cos(usedMotors[1].pos_current); // 周向里程计，假设舵轮的转向角度为0时，机器人沿着周向前进
             }
         }
         // 更新里程计值
