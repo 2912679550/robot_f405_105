@@ -147,7 +147,4 @@ const float mechAngleRange[2] = {
     180.0f - 61.0f
 }; // 两臂夹角传感器的0点值被定义为模型中直观感觉的补角，单位为度
 
-const float mechSpringMin = 30.0f;  // 期望夹紧弹簧达到预期夹紧力时的最小长度
-const float mechSpringMax = 50.0f;  // 期望夹紧弹簧达到预期夹紧力时的最大长度
-
 #endif /* PHYS_PARAMS_H_ */ 

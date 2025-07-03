@@ -54,7 +54,7 @@ const float adc_spring_offset[2][2] = {
 
 const float spring_length_limit[2] = {
     47.0f, // 弹簧最短长度
-    58.0f  // 弹簧原长
+    60.0f  // 弹簧原长
 };
 
 const float adc_angle_offset[4] = {
