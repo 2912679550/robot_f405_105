@@ -365,10 +365,11 @@ namespace TskMainAssistBoard
         dr3_tar_angle = saturate(boardCmd_->dr3_tar_angle, mechAngleRange[1], mechAngleRange[0]); // 夹角传感器的值
         boardVal_->dr3_real_angle = usedMotors[2].pos_current; // 夹角传感器的值
         // 夹角电机的控制逻辑
-        if(boardCmd_->dr3_tar_tight > 10.0f){
+        if(boardCmd_->dr3_tar_tight > 10.0f && boardCmd_->dr3_tar_tight <= 59.0f){
             // 发来夹紧指令时就不在控制夹角电机
             usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE;
-        }else{
+        }else if(boardCmd_->dr3_tar_tight <= 10.0f || boardCmd_->dr3_tar_tight > 59.0f)
+        {
             usedMotors[2].set_tar(PID_MODE::PID_MODE_POSITION, dr3_tar_angle); // 夹角电机位置环的输入值，配置舵电机角度
         }
     }
