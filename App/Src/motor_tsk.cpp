@@ -55,7 +55,6 @@ namespace TskMotorPID
             // configASSERT(rtn);
             motorCnt++;
             
-
             // * 接收电机数据
             if (pdPASS == xQueueReceive(can1RxQueueHandle, motor_, 0) && motor_ -> id < MOTOR_NUM)
                 usedMotors[motor_->id].unpackCanData(motor_);   // 此时已经将can帧的消息解包到电机类中
