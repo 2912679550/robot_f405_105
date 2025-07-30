@@ -50,8 +50,8 @@ extern "C"
     // ! used for visual pwm
     extern int tar_count[3];
     static uint16_t PUSH_PINS[3] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2};
-    #define VISUAL_TIM_HZ 100.0 // 通过IO模拟的PWM频率，单位Hz
-    #define VISUAL_TIM_PERIOD 10.0 // 用于控制模拟IO的定时器中断，单位为us
+    #define VISUAL_TIM_HZ 50.0 // 通过IO模拟的PWM频率，单位Hz
+    #define VISUAL_TIM_PERIOD 50.0 // 用于控制模拟IO的定时器中断，单位为us
     // ! used for visual pwm
 
     typedef enum

@@ -107,6 +107,8 @@ void StartDefaultTask(void *argument);
   */
 int main(void)
 {
+    
+    
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -762,26 +764,26 @@ void StartDefaultTask(void *argument)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* USER CODE BEGIN Callback 0 */
-  static uint32_t cnt = 0;
+    static uint32_t cnt = 0;
+    static int pwm_count = 0;
   /* USER CODE END Callback 0 */
     if (htim->Instance == TIM3)
     {
-        static int pwm_count = 0;
+        // 1 / HZ 表示以s为单位的时间周期， 乘以1000.0 * 1000.0转换为微秒
         static int pwm_count_max = int(1.0 / VISUAL_TIM_HZ * 1000.0 * 1000.0 / VISUAL_TIM_PERIOD);
         pwm_count++;
-
+        
+        for (int i = 0; i < 3; i++)
+        {
+            if (pwm_count <= tar_count[i])
+            HAL_GPIO_WritePin(GPIOC, PUSH_PINS[i], GPIO_PIN_SET);
+            else
+            HAL_GPIO_WritePin(GPIOC, PUSH_PINS[i], GPIO_PIN_RESET);
+        }
         if (pwm_count == pwm_count_max)
         {
             pwm_count = 0;
             return;
-        }
-
-        for (int i = 0; i < 3; i++)
-        {
-            if (pwm_count <= tar_count[i])
-                HAL_GPIO_WritePin(GPIOC, PUSH_PINS[i], GPIO_PIN_SET);
-            else
-                HAL_GPIO_WritePin(GPIOC, PUSH_PINS[i], GPIO_PIN_RESET);
         }
     }
   /* USER CODE BEGIN Callback 1 */

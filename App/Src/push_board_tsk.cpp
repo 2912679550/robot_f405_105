@@ -6,7 +6,7 @@
 
 #define push_debug 0
 bool pcOnline_ = false; // 连接上PC的标志位
-float debugTarLength[3] = {20.0f, 20.0f, 15.0f}; // 用于调试的目标长度,便于在debug中直接控制
+float debugTarLength[3] = {25.0f, 25.0f, 15.0f}; // 用于调试的目标长度,便于在debug中直接控制
 int tar_count[3] = {0, 0, 0}; // 用于虚拟PWM的计数器
 
 namespace TskPushBoard
@@ -96,7 +96,7 @@ namespace TskPushBoard
         if(push_id > PUSH_ID::MIDDLE) return; // 超出范围，直接返回
         if(length < PUSH_LENGTH_MIN[push_id]) length = PUSH_LENGTH_MIN[push_id]; // 小于0，设置为0
         if(length > PUSH_LENGTH_MAX[push_id]) length = PUSH_LENGTH_MAX[push_id]; // 大于最大值，设置为最大值
-        float pwm_value = (length / PUSH_LENGTH[push_id]) * 1000.0f + 1000.0f; // 计算对应的PWM值
+        float pwm_value = (length / PUSH_LENGTH[push_id]) * 1000.0f + 1000.0f; // 计算对应的高电平时间，单位为us
         #ifndef USE_VISUAL_PWM
         __HAL_TIM_SET_COMPARE(allTims[push_id], allChannels[push_id], (uint32_t)pwm_value); // 设置PWM值
         #else
