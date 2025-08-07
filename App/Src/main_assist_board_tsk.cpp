@@ -122,9 +122,13 @@ namespace TskMainAssistBoard
 
 #else
             // 机构电机的数据已经在子任务中完成装填
-            boardVal_->dr1_real_vel = usedMotors[0].vel_current;    // 用于在上位机监控当前轮电机电流
+            boardVal_->dr1_real_vel = usedMotors[0].vel_current;    
             boardVal_->dr2_real_vel = usedMotors[1].vel_current;
             boardVal_->dr2_real_pos = usedMotors[1].pos_current;
+            boardVal_->cur_1 = usedMotors[0].cur_current; // 轮电机的实际电流
+            boardVal_->cur_2 = usedMotors[1].cur_current; // 转向电机的实际电流
+            boardVal_->cur_3 = usedMotors[2].cur_current; // 机构电机的实际电流
+            boardVal_->mech_pos = usedMotors[2].pos_current; // 机构电机的实际位置
 #endif
             // * 每隔ethPeriod个周期将舵轮的状态信息发送到以太网
             xQueueSend(TskEth::mainAssistValQueue, boardVal_, 0);
@@ -236,7 +240,7 @@ namespace TskMainAssistBoard
         index = TCP_IP_ID < 3 ? 0 : 1; // 弹簧传感器参数索引
         adcVal[0] = float(adcOri[0]) * adc_spring_coeff[index][0] + adc_spring_offset[index][0]; // 弹簧传感器的值
         adcVal[1] = float(adcOri[1]) * adc_spring_coeff[index][1] + adc_spring_offset[index][1]; // 弹簧传感器的值
-        usedMotors[2].pos_current = (adcVal[0] + adcVal[1]) / 2.0f; // 弹簧传感器的值,取平均值
+        // usedMotors[2].pos_current = (adcVal[0] + adcVal[1]) / 2.0f; // 弹簧传感器的值,取平均值
         // 中间丝杠电机的控制逻辑
         dr3_tar_spring = boardCmd_->dr3_tar_tight;
         boardVal_->real_spring1 = adcVal[0];    // 存储左右测距传感器测量得到的弹簧长度
@@ -269,6 +273,9 @@ namespace TskMainAssistBoard
                 if(HAL_GPIO_ReadPin(LaserSensor0_GPIO_Port, LaserSensor0_Pin) == 1){
                     // 触发到了电子限位器，此时就不能继续让电机再松开了
                     usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE;  // 到达期望位置，电机失能
+                    // ! 工程化代码： 直接重置丝杠电机位置
+                    reset_total_angle(&motor_chassis[2]);
+                    // ! end
                     return; // 直接返回
                 }else{
                     usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, -15.0f); // 松开

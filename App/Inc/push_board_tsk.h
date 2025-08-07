@@ -27,7 +27,7 @@ typedef enum
 } PUSH_ID;
 
 #define TIM_HZ 50.0 // 定时器的频率，单位Hz
-
+#define VISUAL_PWM_OFFSET 100.0f
 #define USE_VISUAL_PWM 0 // 是否使用模拟PWM输出
 static float PUSH_LENGTH[3] = {100.0 , 100.0 , 50.0};       // 推杆的控制长度，单位mm
 static float PUSH_LENGTH_MAX[3] = {90.0 , 90.0 , 45.0};   // 推杆的理论工作最大长度，单位mm，用于保护机构

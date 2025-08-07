@@ -57,7 +57,7 @@ const char MAIN_ASSIST_CMD_MEMBER_NUM = 5;
 //                        舵轮目标位置(dr2)，舵轮实际位置(dr2)
 //                        两臂目标夹角，两臂实际夹角
 //                        主丝杠目标夹紧状态，主丝杠目前夹紧值（1左2右）
-const char MAIN_ASSIST_VAL_NAME[9][13] = { "state", 
+const char MAIN_ASSIST_VAL_NAME[13][13] = { "state", 
                                             "real1_v", 
                                             "real2_v",
                                             "real_p", 
@@ -65,20 +65,21 @@ const char MAIN_ASSIST_VAL_NAME[9][13] = { "state",
                                             "real_s1",
                                             "real_s2",
                                             "odom_axis",
-                                            "odom_cir"
-                                            // "tar1_v", 
-                                            // "tar2_v", 
-                                            // "tar_p", 
-                                            // "tar_angle",
-                                            // "tar_spring", 
+                                            "odom_cir" , 
+                                            "cur_1",    // 轮 舵 机构 三个电机的实际电流
+                                            "cur_2",
+                                            "cur_3",
+                                            "mech_pos" // 机构电机的实际位置
                                         };
-const char MAIN_ASSIST_VAL_TYPE_RECORD[9] = {1, 
+const char MAIN_ASSIST_VAL_TYPE_RECORD[13] = {1, 
                                             2, 2,
                                             2, 2, 
                                             2, 2, 
                                             2, 2, 
-                                            };
-const char MAIN_ASSIST_VAL_MEMBER_NUM = 9;
+                                            2  , 2, 2,
+                                            2
+                                        };
+const char MAIN_ASSIST_VAL_MEMBER_NUM = 13;
 
 // * 推杆控制板的控制指令
 const char PUSH_CMD_NAME[3][13] = {

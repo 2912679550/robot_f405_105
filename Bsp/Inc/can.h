@@ -60,13 +60,14 @@ extern "C"
     int32_t total_angle;
     uint32_t msg_cnt;
 
-} moto_measure_t;
+} motor_measure_t;
 
-  extern QueueHandle_t reset_flag;
-  void CAN_Start_Trans(void);
-  void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan);
-  void CAN_SendMsg(uint16_t id, uint8_t TxData[]);
-  void reset_total_angle(moto_measure_t *ptr);
+extern QueueHandle_t reset_flag;
+extern motor_measure_t motor_chassis[3] ;
+void CAN_Start_Trans(void);
+void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan);
+void CAN_SendMsg(uint16_t id, uint8_t TxData[]);
+void reset_total_angle(motor_measure_t *ptr);
 
 #ifdef __cplusplus
 }

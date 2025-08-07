@@ -50,7 +50,7 @@ float MOTOR::pidTick(PID_MODE mode, float delta){
     return out2can;
 }
 
-void MOTOR::unpackCanData(moto_measure_t *motorData){
+void MOTOR::unpackCanData(motor_measure_t *motorData){
     if(motorData == nullptr) return;
     if(cali_flag == false){
         if(outer_pos == false)pos_current = motorData->total_angle * can2pos ; // 这里的total_angle是电调返回的直接值，大疆使用了0~8191来表示0~360度，所以数值最后还需要乘一个2pi/8192

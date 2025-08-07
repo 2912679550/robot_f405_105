@@ -51,7 +51,7 @@ extern "C"
     extern int tar_count[3];
     static uint16_t PUSH_PINS[3] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2};
     #define VISUAL_TIM_HZ 50.0 // 通过IO模拟的PWM频率，单位Hz
-    #define VISUAL_TIM_PERIOD 50.0 // 用于控制模拟IO的定时器中断，单位为us
+    #define VISUAL_TIM_PERIOD 10.0 // 用于控制模拟IO的定时器中断，单位为us
     // ! used for visual pwm
 
     typedef enum
@@ -111,6 +111,10 @@ extern "C"
         float real_spring2; // 0~2, 0:stop 1:left 2:right
         float odom_axis; // 机器人在轴向的里程计距离
         float odom_cir;  // 机器人在周向的里程计距离
+        float cur_1;     // 轮电机的实际电流
+        float cur_2;     // 转向电机的实际电流
+        float cur_3;     // 机构电机的实际电流
+        float mech_pos;  // 机构电机的实际位置
         // float dr1_tar_vel;  // 
         // float dr2_tar_vel;  // 
         // float dr2_tar_pos;  // 

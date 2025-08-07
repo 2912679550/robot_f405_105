@@ -58,6 +58,10 @@ const float wheelR[2] = { 100.0 / 1000.0 * 0.5 , 60.0 / 1000.0 * 0.5}; //
 const float wheelRatio[2] = {M2006_RATIO * 19.71 , M2006_RATIO * 40.0 / 14.0}; // 从电机转子rpm到车轮rpm       19.0f * 2.7551
 const float steerRatio[2] = {M2006_RATIO * 125.0/15.0 , M2006_RATIO * 81.0 / 15.0}; // 从电机转子rpm到舵向rpm       19.0f * 2.7551
 
+// * 夹紧电机减速比 ： 齿轮为22:46， 丝杠导程为2mm
+const float tightRatio = 46.0f / 22.0f * M2006_RATIO; // 2.0909 * 36.0f; // 从电机转子rpm到丝杠转子rpm
+const float screwLead = 2.0f ; // 丝杠每转一圈，轴向前进2mm
+
 // 机器人运动的最大线速度
 const float maxVel = 0.2f; // 0.3m/s
 // 位置控制中最大角速度

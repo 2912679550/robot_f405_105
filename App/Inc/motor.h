@@ -70,7 +70,7 @@ public:
     void initMotorPid(PID_PARAM *speedPidParam, FFPID_PARAM *posPidParam);
     // PID计算，输入与期望值的偏差，输出电流值（双环内部会嵌套计算）
     float pidTick(PID_MODE mode, float delta);
-    void unpackCanData(moto_measure_t *motorData);
+    void unpackCanData(motor_measure_t *motorData);
     ffPid* pos_pid = nullptr; // 位置环PID
     Pid* speed_pid = nullptr; // 速度环PID
     void set_tar(PID_MODE mode, float tar) ;

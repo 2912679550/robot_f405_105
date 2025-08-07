@@ -17,9 +17,10 @@ namespace TskMotorPID
     float wheelRatio_ = 0.f;    // 轮电机电机的减速比
     float steerRatio_ = 0.f;    // 舵电电机的减速比
     float wheelR_ = 0.f;        // 舵轮轮胎半径
+    float mechRatio_ = 0.f;    // 机构电机的减速比
 
     // * 信息容器
-    moto_measure_t *motor_ = nullptr;
+    motor_measure_t *motor_ = nullptr;
     int TCP_IP_ID = 0;
     BORAD_TYPE boradType_ = BORAD_TYPE::idle; // 控制板类型(这个任务中只会设置为主驱动轮或辅助驱动轮)
     uint32_t motorCnt = 0;
@@ -27,10 +28,10 @@ namespace TskMotorPID
     void Init(){
         BaseType_t rtn;
         
-        load_params_(); // 读取参数
+        load_pid_params_(); // 读取参数
         load_motor_params_(); // 装载电机类的机械参数
         
-        motor_ = (moto_measure_t *)pvPortMalloc(sizeof(moto_measure_t));
+        motor_ = (motor_measure_t *)pvPortMalloc(sizeof(motor_measure_t));
         if (motor_ == nullptr)
             return;
         // 创建电机PID解算与控制任务
@@ -42,7 +43,7 @@ namespace TskMotorPID
     void motorTickTask(void *pvParameters)
     {
         BaseType_t rtn;
-        can1RxQueueHandle = xQueueCreate(6, sizeof(moto_measure_t));
+        can1RxQueueHandle = xQueueCreate(6, sizeof(motor_measure_t));
         // 初始化can并使能中断
         CAN_Start_Trans();
         uint8_t curCmd[8] = {0};
@@ -102,7 +103,7 @@ namespace TskMotorPID
         }
     }
 
-    void load_params_(){
+    void load_pid_params_(){
         if(boradType_ == BORAD_TYPE::idle){
             return;
         }
@@ -192,6 +193,7 @@ namespace TskMotorPID
         wheelRatio_ = wheelRatio[index];
         steerRatio_ = steerRatio[index];
         wheelR_ = wheelR[index];
+        mechRatio_ = tightRatio; // 机构电机的减速比
 
         usedMotors[0].can2cur = C610ICoeff; // dr1 轮电机
         usedMotors[0].can2vel = wheelR_ / wheelRatio_ / toRPM; // dr1 轮电机,表示的是轮子的线速度
@@ -205,7 +207,10 @@ namespace TskMotorPID
         // * 暂时保留
         usedMotors[2].can2cur = C610ICoeff; // dr3 机构电机
         usedMotors[2].can2vel = 1/ toRPM / M2006_RATIO; // dr3 机构电机，单位为rad/s
-        usedMotors[2].can2pos = 0; // dr3 机构电机,单位为rad
+        if(boradType_ == BORAD_TYPE::MAIN_BOARD){
+            usedMotors[2].can2pos = 1 / 8192.0f  / tightRatio * screwLead;  // 丝杠转一圈，轴向前进2mm,单位为mm
+        }
+        else usedMotors[2].can2pos = 0; // dr3 机构电机,单位为rad
 
         // * 配置旋转方向
         usedMotors[0].mech_dir = wheelDir[TCP_IP_ID];

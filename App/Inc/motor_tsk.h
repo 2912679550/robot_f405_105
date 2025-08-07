@@ -28,7 +28,7 @@ namespace TskMotorPID{
     extern int TCP_IP_ID; // 配置的IP地址的末尾，表示板子的序号，用于后续读取不同的传感器参数值
     void Init();
     void motorTickTask(void *pvParameters);
-    void load_params_(); // 读取参数
+    void load_pid_params_(); // 读取参数
     void load_motor_params_(); // 装载电机类的机械参数
 }
 

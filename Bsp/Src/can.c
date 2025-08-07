@@ -23,9 +23,9 @@
 
 // 交互复位信息
 QueueHandle_t reset_flag;
-moto_measure_t moto_chassis[3] = {0};
+motor_measure_t motor_chassis[3] = {0};
 
-void get_moto_measure(moto_measure_t *ptr, uint8_t *data)
+void get_moto_measure(motor_measure_t *ptr, uint8_t *data)
 {
     ptr->last_angle = ptr->angle;
     ptr->angle = (uint16_t)(data[0] << 8 | data[1]);
@@ -41,7 +41,7 @@ void get_moto_measure(moto_measure_t *ptr, uint8_t *data)
 }
 
 /*this function should be called after system+can init */
-void get_moto_offset(moto_measure_t *ptr, uint8_t *data)
+void get_moto_offset(motor_measure_t *ptr, uint8_t *data)
 {
     ptr->angle = (uint16_t)(data[0] << 8 | data[1]);
     ptr->offset_angle = ptr->angle;
@@ -50,7 +50,7 @@ void get_moto_offset(moto_measure_t *ptr, uint8_t *data)
 /*
  * when working as Steering wheel, use it to clear 2006 angle when reset.
  */
-void reset_total_angle(moto_measure_t *ptr)
+void reset_total_angle(motor_measure_t *ptr)
 {
     ptr->offset_angle = ptr->angle;
     ptr->total_angle = 0;
@@ -133,16 +133,16 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
         case CAN_Moto3_ID:
         {
             i = hCAN1_RxHeader.StdId - CAN_Moto1_ID;
-            moto_chassis[i].id = i;
+            motor_chassis[i].id = i;
             // 前50帧数据为偏置值
-            moto_chassis[i].msg_cnt++ <= 50 ? get_moto_offset(&moto_chassis[i], aRxData) : get_moto_measure(&moto_chassis[i], aRxData);
+            motor_chassis[i].msg_cnt++ <= 50 ? get_moto_offset(&motor_chassis[i], aRxData) : get_moto_measure(&motor_chassis[i], aRxData);
             // 接收到触发信息，M2006角度复位
             if (pdTRUE == xQueueReceiveFromISR(reset_flag, (void *)&flag, 0))
             {
-                reset_total_angle(&moto_chassis[flag]);
+                reset_total_angle(&motor_chassis[flag]);
             }
             BaseType_t pxHigherPriorityTaskWoken;
-            xQueueSendFromISR(can1RxQueueHandle, &moto_chassis[i], &pxHigherPriorityTaskWoken);
+            xQueueSendFromISR(can1RxQueueHandle, &motor_chassis[i], &pxHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);
         }
         break;
