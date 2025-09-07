@@ -131,7 +131,7 @@ namespace TskMotorPID
         dr2PosPID_->wc = 50;
         dr2PosPID_->ts = motorTs;
         dr2PosPID_->outIMin = -maxSteerOmg / 5;
-        dr2PosPID_->outIMax = maxSteerOmg / 5;
+        dr2PosPID_->outIMax = maxSteerOmg  / 5;
         dr2PosPID_->Iband = thPosPidIband[index];
         dr2PosPID_->outMin = -maxSteerOmg;
         dr2PosPID_->outMax = maxSteerOmg;

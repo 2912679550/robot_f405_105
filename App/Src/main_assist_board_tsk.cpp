@@ -232,6 +232,7 @@ namespace TskMainAssistBoard
 
     void main_board_sub_tsk(){
         static float dr3_tar_spring = 0.0f;
+        static float dr3_tar_last = 0.0; // 用于存储上一次接收到的期望弹簧长度, 只有当期望弹簧长度发生变化时才重新修改dr3_tar_spring
         static bool spring_length_arrived = false; // 用于判断弹簧长度是否到达目标值
         HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adcOri, 3); // 启动ADC转换
         int index = 0;
@@ -242,15 +243,18 @@ namespace TskMainAssistBoard
         adcVal[1] = float(adcOri[1]) * adc_spring_coeff[index][1] + adc_spring_offset[index][1]; // 弹簧传感器的值
         // usedMotors[2].pos_current = (adcVal[0] + adcVal[1]) / 2.0f; // 弹簧传感器的值,取平均值
         // 中间丝杠电机的控制逻辑
-        dr3_tar_spring = boardCmd_->dr3_tar_tight;
         boardVal_->real_spring1 = adcVal[0];    // 存储左右测距传感器测量得到的弹簧长度
         boardVal_->real_spring2 = adcVal[1]; 
         float mean_spring_length = (adcVal[0] + adcVal[1]) / 2.0f; // 平均弹簧长度
-
+        
         // todo 250703 控制逻辑2： 将丝杆弹簧压缩量改为连续可调模式
-        dr3_tar_spring = saturate(dr3_tar_spring, spring_length_limit[1], spring_length_limit[0]); // 限制弹簧长度的范围
+        // dr3_tar_spring = ;
+        if( abs(dr3_tar_last - boardCmd_->dr3_tar_tight) > 0.05){
+            dr3_tar_last = boardCmd_->dr3_tar_tight;
+            dr3_tar_spring = saturate(boardCmd_->dr3_tar_tight, spring_length_limit[1], spring_length_limit[0]); // 限制弹簧长度的范围
+        }
 
-        if( abs(mean_spring_length - dr3_tar_spring) < 0.5f){
+        if( abs(mean_spring_length - dr3_tar_spring) < 0.1f){
             spring_length_arrived = true;
             usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE;  // 到达期望位置，电机失能
             return; // 直接返回
@@ -260,14 +264,17 @@ namespace TskMainAssistBoard
             if(mean_spring_length >= dr3_tar_spring){   // 弹簧长度大于等于目标值，表示希望夹紧
                 usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, 15.0f); // 夹紧
                 if(
-                    usedMotors[2].work_log == WORKING_LOG::BLOCK ||
-                    (
-                        // 两遍的弹簧长度都小于等与目标值，说明已经被压缩到位
-                        adcVal[0] <= dr3_tar_spring &&
-                        adcVal[1] <= dr3_tar_spring
-                    )
+                    usedMotors[2].work_log == WORKING_LOG::BLOCK //  ||
+                    // (
+                    //     // 两遍的弹簧长度都小于等与目标值，说明已经被压缩到位
+                    //     adcVal[0] <= dr3_tar_spring &&
+                    //     adcVal[1] <= dr3_tar_spring
+                    // )
                 ){
-                    springTight = true; // 给出夹紧成功的标志，相比于原来，这里就不再存储夹紧长度了
+                    // springTight = true; // 给出夹紧成功的标志，相比于原来，这里就不再存储夹紧长度了
+                    // 如果夹紧过程中电机出现堵转, 则存储当前的弹簧长度, 并修改期望长度
+                    dr3_tar_spring = mean_spring_length;
+                    usedMotors[2].work_log = WORKING_LOG::NORMAL;
                 }
             }else{
                 if(HAL_GPIO_ReadPin(LaserSensor0_GPIO_Port, LaserSensor0_Pin) == 1){

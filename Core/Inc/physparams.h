@@ -55,7 +55,7 @@ const float C610ICoeff = 10.f / 10000.f; // M2006 C610 -10000~10000 -> -10 ~ 10A
 #define M2006_RATIO  36.0f // M2006电机减速比
 const float wheelR[2] = { 100.0 / 1000.0 * 0.5 , 60.0 / 1000.0 * 0.5}; // 
 // 驱动电机减速比
-const float wheelRatio[2] = {M2006_RATIO * 19.71 , M2006_RATIO * 40.0 / 14.0}; // 从电机转子rpm到车轮rpm       19.0f * 2.7551
+const float wheelRatio[2] = {M2006_RATIO * 19.71 , M2006_RATIO * 40.0 / 14.0 * 43.0 / 17.0}; // 从电机转子rpm到车轮rpm       19.0f * 2.7551
 const float steerRatio[2] = {M2006_RATIO * 125.0/15.0 , M2006_RATIO * 81.0 / 15.0}; // 从电机转子rpm到舵向rpm       19.0f * 2.7551
 
 // * 夹紧电机减速比 ： 齿轮为22:46， 丝杠导程为2mm
@@ -132,6 +132,7 @@ const double caliAngle_mech[6] = {
 // ! 机构电机的安装方向
 const float wheelDir[6] = {
     1.f, -1.f, -1.f, 1.f, -1.f, 1.f}; // 轮电机旋转方向与数学定义的关系 usedMotors[0]
+    // -1.f, 1.f, -1.f, -1.f, 1.f, 1.f}; // 轮电机旋转方向与数学定义的关系 usedMotors[0]
 const float steerDir[6] = {
     1.f, 1.f, 1.f, 1.f, 1.f, 1.f}; // 舵向电机旋转方向与数学定义的关系 usedMotors[1]
 const float mechDir[6] = {
@@ -145,8 +146,8 @@ const float steerDirRange[2] =
 // 夹360mm管子时，臂的角度124.6°
 // 夹220mm管子时，臂的角度61°
 const float mechAngleRange[2] = {
-    180.0f - 125.0f,
-    180.0f - 61.0f
+    25.0 ,  // 180.0f - 125.0f,
+    180.0f - 25.0f // 180.0f - 61.0f
 }; // 两臂夹角传感器的0点值被定义为模型中直观感觉的补角，单位为度
 
 #endif /* PHYS_PARAMS_H_ */ 
