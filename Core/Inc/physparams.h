@@ -45,7 +45,8 @@ const float C610ICoeff = 10.f / 10000.f; // M2006 C610 -10000~10000 -> -10 ~ 10A
             主动轮舵向传动比：125:15
     辅助轮：
         轮电机：
-            带轮40：14；
+            // 带轮 40：14；
+            新版: 带轮: 20:30 齿轮: 12:56 即总传动比为: (56 * 30) / (20 * 12) = 7 : 1
             轮子直径60mm，
             驱动力 1*40/14/0.03*0.9=85N。
         舵电机：
@@ -55,7 +56,8 @@ const float C610ICoeff = 10.f / 10000.f; // M2006 C610 -10000~10000 -> -10 ~ 10A
 #define M2006_RATIO  36.0f // M2006电机减速比
 const float wheelR[2] = { 100.0 / 1000.0 * 0.5 , 60.0 / 1000.0 * 0.5}; // 
 // 驱动电机减速比
-const float wheelRatio[2] = {M2006_RATIO * 19.71 , M2006_RATIO * 40.0 / 14.0 * 43.0 / 17.0}; // 从电机转子rpm到车轮rpm       19.0f * 2.7551
+// const float wheelRatio[2] = {M2006_RATIO * 19.71 , M2006_RATIO * 40.0 / 14.0 * 43.0 / 17.0}; // 从电机转子rpm到车轮rpm       19.0f * 2.7551
+const float wheelRatio[2] = {M2006_RATIO * 19.71 , M2006_RATIO * 30.0 / 20.0 * 56.0 / 12.0}; // 从电机转子rpm到车轮rpm       19.0f * 2.7551
 const float steerRatio[2] = {M2006_RATIO * 125.0/15.0 , M2006_RATIO * 81.0 / 15.0}; // 从电机转子rpm到舵向rpm       19.0f * 2.7551
 
 // * 夹紧电机减速比 ： 齿轮为22:46， 丝杠导程为2mm
@@ -131,8 +133,8 @@ const double caliAngle_mech[6] = {
 
 // ! 机构电机的安装方向
 const float wheelDir[6] = {
-    1.f, -1.f, -1.f, 1.f, -1.f, 1.f}; // 轮电机旋转方向与数学定义的关系 usedMotors[0]
-    // -1.f, 1.f, -1.f, -1.f, 1.f, 1.f}; // 轮电机旋转方向与数学定义的关系 usedMotors[0]
+    // 1.f, -1.f, -1.f, 1.f, -1.f, 1.f}; // 轮电机旋转方向与数学定义的关系 usedMotors[0]
+    -1.f, 1.f, -1.f, -1.f, 1.f, 1.f}; // 轮电机旋转方向与数学定义的关系 usedMotors[0]
 const float steerDir[6] = {
     1.f, 1.f, 1.f, 1.f, 1.f, 1.f}; // 舵向电机旋转方向与数学定义的关系 usedMotors[1]
 const float mechDir[6] = {
