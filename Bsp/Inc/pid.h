@@ -14,7 +14,7 @@ class Pid
 private:
 float accI, accD, accIMax, accIMin, accDMax, accDMin, outMax, outMin, Iband;
 public:
-    float p, i, d, n, ts;
+    float p, i, d, n, ts, diff_; 
     Pid(float p, float i, float d, float n, float ts,  float outIMin, float outIMax, float Iband, float outMin, float outMax);
     Pid(PID_PARAM *param);
     float Tick(float diff);

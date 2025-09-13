@@ -57,6 +57,7 @@ void Pid::Reset()
 
 float Pid::Tick(float diff)
 {
+    diff_ = diff;
     float pout;
 #ifdef USED
     float dout;

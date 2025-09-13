@@ -104,7 +104,7 @@ const float vVelPidI[2] =
 const float vVelPidD[2] = 
     {1000.0f, 1200.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
 const float vVelPidIband[2] = 
-    {3000.0f, 300.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+    {0.02f, 0.02f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
 
 // ! 机构执行电机参数
 // * 机构电机位置环
@@ -122,7 +122,7 @@ const float mechVelPidI[2] =
 const float mechVelPidD[2] = 
     {120.f, 5.f};
 const float mechVelPidIband[2] = 
-    {500.f, 500.f};
+    {20.f, 20.f};
 
 // ! 用于标定舵轮角度值
 // 注意在motor类中解析时是将这个值加在了电机的原始值上，需要注意正负符号

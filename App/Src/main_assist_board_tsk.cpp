@@ -262,7 +262,7 @@ namespace TskMainAssistBoard
             // 当前长度与期望值之间存在差异
             spring_length_arrived = false; // 弹簧长度未到达目标值
             if(mean_spring_length >= dr3_tar_spring){   // 弹簧长度大于等于目标值，表示希望夹紧
-                usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, 15.0f); // 夹紧
+                usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, 20.0f); // 夹紧
                 if(
                     usedMotors[2].work_log == WORKING_LOG::BLOCK //  ||
                     // (
@@ -285,7 +285,7 @@ namespace TskMainAssistBoard
                     // ! end
                     return; // 直接返回
                 }else{
-                    usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, -15.0f); // 松开
+                    usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, -30.0f); // 松开
                 }
             }
         }
