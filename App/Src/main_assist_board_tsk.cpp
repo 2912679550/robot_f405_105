@@ -62,6 +62,19 @@ namespace TskMainAssistBoard
         configASSERT(rtn == pdPASS);
     }
 
+    float get_adc_val(float adcIn){
+        bool init = false;
+        static float val_ = 0.0;
+        static float averge_gate_ = 200.0;   // 200次滑窗求平均
+        if(init == false){
+            init = true;
+            val_ = adcIn;
+        }else{
+            val_ = val_ * (averge_gate_ - 1) / averge_gate_ + adcIn / averge_gate_;
+        }
+        return val_;
+    }
+
     void main_assist_board_task(void *pvParameters)
     {
         BaseType_t rtn;
@@ -102,6 +115,7 @@ namespace TskMainAssistBoard
                 // 后左： 3，对应参数数组2号索引 // 后右： 4，对应参数数组3号索引
                 index = TCP_IP_ID > 1 ? TCP_IP_ID - 1: TCP_IP_ID; // 夹角传感器参数索引
                 adcVal[0] = float(adcOri[0]) * adc_angle_coeff[index] + adc_angle_offset[index]; // 夹角传感器的值
+                adcVal[0] = get_adc_val(adcVal[0]);
                 usedMotors[2].pos_current = angle_stand_deg(adcVal[0]); // 夹角传感器的值
             }
 #else
@@ -231,9 +245,13 @@ namespace TskMainAssistBoard
     }
 
     void main_board_sub_tsk(){
+        // *  用于夹紧控制策略的内置变量
         static float dr3_tar_spring = 0.0f;
         static float dr3_tar_last = 0.0; // 用于存储上一次接收到的期望弹簧长度, 只有当期望弹簧长度发生变化时才重新修改dr3_tar_spring
         static bool spring_length_arrived = false; // 用于判断弹簧长度是否到达目标值
+        static bool motor_enable = false;   // 逻辑3 , 电机使能标志位
+        static int motor_en_dir = 1;        // 逻辑3 , 允许的电机旋转方向
+
         HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adcOri, 3); // 启动ADC转换
         int index = 0;
         // 前中： 2 ， 对应参数数组0号索引
@@ -247,48 +265,82 @@ namespace TskMainAssistBoard
         boardVal_->real_spring2 = adcVal[1]; 
         float mean_spring_length = (adcVal[0] + adcVal[1]) / 2.0f; // 平均弹簧长度
         
-        // todo 250703 控制逻辑2： 将丝杆弹簧压缩量改为连续可调模式
-        // dr3_tar_spring = ;
-        if( abs(dr3_tar_last - boardCmd_->dr3_tar_tight) > 0.05){
+        // todo 250915 控制逻辑3: 由输入长度的变化 -> 电机使能信号 & 电机允许旋转方向 -> 电机工作 -> 自动失能
+        if( abs(dr3_tar_last - boardCmd_->dr3_tar_tight) > 0.05 ){
+            // 如果期望的夹紧长度发生变化 (上层的夹紧长度)
             dr3_tar_last = boardCmd_->dr3_tar_tight;
-            dr3_tar_spring = saturate(boardCmd_->dr3_tar_tight, spring_length_limit[1], spring_length_limit[0]); // 限制弹簧长度的范围
+            dr3_tar_spring = saturate(boardCmd_->dr3_tar_tight, spring_length_limit[1], spring_length_limit[0]);
+            motor_enable = true;
+            motor_en_dir = mean_spring_length > dr3_tar_spring ? 1 : -1;
         }
+        // 依据生成的旋转方向判断是否夹紧到位  (这里的 0.01 为一定的防抖阈度)
+        if((motor_en_dir == 1)  &&  (mean_spring_length - 0.01 <= dr3_tar_spring) ) motor_enable = false;
+        else if( (motor_en_dir == -1) && (mean_spring_length + 0.01 >= dr3_tar_spring) ) motor_enable = false;
 
-        if( abs(mean_spring_length - dr3_tar_spring) < 0.1f){
-            spring_length_arrived = true;
-            usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE;  // 到达期望位置，电机失能
-            return; // 直接返回
-        }else{
-            // 当前长度与期望值之间存在差异
-            spring_length_arrived = false; // 弹簧长度未到达目标值
-            if(mean_spring_length >= dr3_tar_spring){   // 弹簧长度大于等于目标值，表示希望夹紧
-                usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, 20.0f); // 夹紧
-                if(
-                    usedMotors[2].work_log == WORKING_LOG::BLOCK //  ||
-                    // (
-                    //     // 两遍的弹簧长度都小于等与目标值，说明已经被压缩到位
-                    //     adcVal[0] <= dr3_tar_spring &&
-                    //     adcVal[1] <= dr3_tar_spring
-                    // )
-                ){
-                    // springTight = true; // 给出夹紧成功的标志，相比于原来，这里就不再存储夹紧长度了
-                    // 如果夹紧过程中电机出现堵转, 则存储当前的弹簧长度, 并修改期望长度
-                    dr3_tar_spring = mean_spring_length;
-                    usedMotors[2].work_log = WORKING_LOG::NORMAL;
-                }
-            }else{
-                if(HAL_GPIO_ReadPin(LaserSensor0_GPIO_Port, LaserSensor0_Pin) == 1){
-                    // 触发到了电子限位器，此时就不能继续让电机再松开了
-                    usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE;  // 到达期望位置，电机失能
-                    // ! 工程化代码： 直接重置丝杠电机位置
-                    reset_total_angle(&motor_chassis[2]);
-                    // ! end
-                    return; // 直接返回
-                }else{
-                    usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, -30.0f); // 松开
-                }
+        // 依据电机使能与电机旋转方向, 控制电机运动
+        if(motor_enable == true){
+            // 夹紧和松开给不同速度
+            if(motor_en_dir == 1) usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, 20.0f); // 夹紧
+            else usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, -30.0f); // 夹紧
+
+            if( (usedMotors[2].work_log == WORKING_LOG::BLOCK) && motor_en_dir == 1 ){
+                // 如果电机堵转, 则直接将当前的压缩量长度存储为目标长度, 在下一次循环中电机就会被自动失能
+                dr3_tar_spring = mean_spring_length;
+                usedMotors[2].work_log = WORKING_LOG::NORMAL;
+            }
+
+            if( (motor_en_dir == -1) && (HAL_GPIO_ReadPin(LaserSensor0_GPIO_Port, LaserSensor0_Pin) == 1)){
+                // 期望松开, 且到达位置限制
+                usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE;  // 到达期望位置，电机失能
+                reset_total_angle(&motor_chassis[2]);   // 重置丝杠电机原点长度
             }
         }
+        else    usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE;  // 电机失能
+        // todo 控制逻辑3 完结
+
+
+        // todo 250703 控制逻辑2： 将丝杆弹簧压缩量改为连续可调模式
+        //  // dr3_tar_spring = ;
+        // if( abs(dr3_tar_last - boardCmd_->dr3_tar_tight) > 0.05){
+        //     dr3_tar_last = boardCmd_->dr3_tar_tight;
+        //     dr3_tar_spring = saturate(boardCmd_->dr3_tar_tight, spring_length_limit[1], spring_length_limit[0]); // 限制弹簧长度的范围
+        // }
+
+        // if( abs(mean_spring_length - dr3_tar_spring) < 0.1f){
+        //     spring_length_arrived = true;
+        //     usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE;  // 到达期望位置，电机失能
+        //     return; // 直接返回
+        // }else{
+        //     // 当前长度与期望值之间存在差异
+        //     spring_length_arrived = false; // 弹簧长度未到达目标值
+        //     if(mean_spring_length >= dr3_tar_spring){   // 弹簧长度大于等于目标值，表示希望夹紧
+        //         usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, 20.0f); // 夹紧
+        //         if(
+        //             usedMotors[2].work_log == WORKING_LOG::BLOCK //  ||
+        //             // (
+        //             //     // 两遍的弹簧长度都小于等与目标值，说明已经被压缩到位
+        //             //     adcVal[0] <= dr3_tar_spring &&
+        //             //     adcVal[1] <= dr3_tar_spring
+        //             // )
+        //         ){
+        //             // springTight = true; // 给出夹紧成功的标志，相比于原来，这里就不再存储夹紧长度了
+        //             // 如果夹紧过程中电机出现堵转, 则存储当前的弹簧长度, 并修改期望长度
+        //             dr3_tar_spring = mean_spring_length;
+        //             usedMotors[2].work_log = WORKING_LOG::NORMAL;
+        //         }
+        //     }else{
+        //         if(HAL_GPIO_ReadPin(LaserSensor0_GPIO_Port, LaserSensor0_Pin) == 1){
+        //             // 触发到了电子限位器，此时就不能继续让电机再松开了
+        //             usedMotors[2].ctrl_mode = PID_MODE::PID_MODE_IDLE;  // 到达期望位置，电机失能
+        //             // ! 工程化代码： 直接重置丝杠电机位置
+        //             reset_total_angle(&motor_chassis[2]);
+        //             // ! end
+        //             return; // 直接返回
+        //         }else{
+        //             usedMotors[2].set_tar(PID_MODE::PID_MODE_VELOCITY, -30.0f); // 松开
+        //         }
+        //     }
+        // }
         // todo 控制逻辑2 完结
 
         // todo： 控制逻辑1：夹紧丝杠电机跑速度环，若tar大于10，表示希望夹紧，反之表示希望松开
@@ -374,6 +426,7 @@ namespace TskMainAssistBoard
         // 后左： 3，对应参数数组2号索引 // 后右： 4，对应参数数组3号索引
         index = TCP_IP_ID > 1 ? TCP_IP_ID - 1: TCP_IP_ID; // 夹角传感器参数索引
         adcVal[0] = float(adcOri[0]) * adc_angle_coeff[index] + adc_angle_offset[index]; // 夹角传感器的值
+        adcVal[0] = get_adc_val(adcVal[0]);
         usedMotors[2].pos_current = angle_stand_deg(adcVal[0]); // 夹角传感器的值
         // * 存储反馈值并控制电机
         dr3_tar_angle = saturate(boardCmd_->dr3_tar_angle, mechAngleRange[1], mechAngleRange[0]); // 夹角传感器的值

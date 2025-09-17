@@ -122,6 +122,10 @@ namespace TskMotorPID
         dr1VelPID_->ts = motorTs;
         dr1VelPID_->outIMin = -3000.0f; // 保证轮电机不会因为I项导致堵转掉电
         dr1VelPID_->outIMax = 3000.0f;
+        if(boradType_ == BORAD_TYPE::MAIN_BOARD){
+            dr1VelPID_->outIMin = -6000.0f; // 保证轮电机不会因为I项导致堵转掉电
+            dr1VelPID_->outIMax = 6000.0f;
+        }
         dr1VelPID_->Iband = vVelPidIband[index];
         dr1VelPID_->outMin = -0.95f * C610Current;
         dr1VelPID_->outMax = 0.95f * C610Current;

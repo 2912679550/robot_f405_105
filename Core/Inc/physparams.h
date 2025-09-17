@@ -104,25 +104,25 @@ const float vVelPidI[2] =
 const float vVelPidD[2] = 
     {1000.0f, 1200.0f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
 const float vVelPidIband[2] = 
-    {0.02f, 0.02f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
+    {0.02f, 0.04f}; // 从前到后为主驱动轮、辅助驱动轮的参数，暂时设置为相同
 
 // ! 机构执行电机参数
 // * 机构电机位置环
 const float mechPosPidP[2] = 
-    {0.f, 5.f}; // 为主控板时，控制的是顶端丝杠，为辅助板时，控制的是一臂与二臂夹角
+    {0.f, 4.f}; // 为主控板时，控制的是顶端丝杠，为辅助板时，控制的是一臂与二臂夹角
 const float mechPosPidI[2] = 
     {0.f, 2.f}; // 为主控板时，控制的是顶端丝杠，为辅助板时，控制的是一臂与二臂夹角
 const float mechPosPidIband[2] = 
-    {0.f, 10.f}; 
+    {0.f, 1.f}; 
 // * 机构电机速度环
 const float mechVelPidP[2] = 
-    {250.f, 150.f}; 
+    {400.f, 150.f}; 
 const float mechVelPidI[2] = 
-    {200.f, 50.f};
+    {500.f, 50.f};
 const float mechVelPidD[2] = 
     {120.f, 5.f};
 const float mechVelPidIband[2] = 
-    {20.f, 20.f};
+    {15.f, 20.f};
 
 // ! 用于标定舵轮角度值
 // 注意在motor类中解析时是将这个值加在了电机的原始值上，需要注意正负符号

@@ -242,6 +242,11 @@
           <WinNumber>2</WinNumber>
           <ItemText>usedMotors</ItemText>
         </Ww>
+        <Ww>
+          <count>7</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>cmdEthInfo</ItemText>
+        </Ww>
       </WatchWindow2>
       <Tracepoint>
         <THDelay>0</THDelay>
