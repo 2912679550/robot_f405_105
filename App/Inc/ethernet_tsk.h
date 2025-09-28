@@ -82,12 +82,14 @@ const char MAIN_ASSIST_VAL_TYPE_RECORD[13] = {1,
 const char MAIN_ASSIST_VAL_MEMBER_NUM = 13;
 
 // * 推杆控制板的控制指令
-const char PUSH_CMD_NAME[3][13] = {
+const char PUSH_CMD_NAME[4][13] = {
     "f_length",
     "b_length",
-    "m_length"};
-const char PUSH_CMD_TYPE_RECORD[3] = {2, 2, 2};
-const char PUSH_CMD_MEMBER_NUM = 3;
+    "m_length",
+    "led"
+    };
+const char PUSH_CMD_TYPE_RECORD[4] = {2, 2, 2 , 1};
+const char PUSH_CMD_MEMBER_NUM = 4;
 // * 推杆控制板的反馈值
 const char PUSH_VAL_NAME[3][13] = {
     "f_length",

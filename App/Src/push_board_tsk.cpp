@@ -2,10 +2,14 @@
 #include "ethernet_tsk.h"
 #include "main.h"
 #include "public_func.h"
-
-
 #define push_debug 0
+
+#define LED_OPEN GPIO_PIN_SET
+#define LED_CLOSE GPIO_PIN_RESET
+
+
 bool pcOnline_ = false; // 连接上PC的标志位
+bool ledOpen = LED_CLOSE;
 float debugTarLength[3] = {26.0f, 26.0f, 15.0f}; // 用于调试的目标长度,便于在debug中直接控制
 int tar_count[3] = {0, 0, 0}; // 用于虚拟PWM的计数器
 
@@ -66,6 +70,8 @@ namespace TskPushBoard
             set_push_length(debugTarLength[0], PUSH_ID::FRONT); // 设置前侧推杆的长度
             set_push_length(debugTarLength[1], PUSH_ID::BACK);  // 设置后侧推杆的长度
             set_push_length(debugTarLength[2], PUSH_ID::MIDDLE); // 设置中间推杆的长度
+            if(ledOpen == true)  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET); // 默认输出低电平
+            else HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET); // 默认输出低电平
             #else
             if (pcOnline_ == false){
                 set_push_length(debugTarLength[0], PUSH_ID::FRONT); // 设置前侧推杆的长度
@@ -78,6 +84,8 @@ namespace TskPushBoard
                 set_push_length(pushCmd_->tar_length_f, PUSH_ID::FRONT); // 设置前侧推杆的长度
                 set_push_length(pushCmd_->tar_length_b, PUSH_ID::BACK);  // 设置后侧推杆的长度
                 set_push_length(pushCmd_->tar_length_m, PUSH_ID::MIDDLE); // 设置中间推杆的长度
+                if(pushCmd_ -> led == 0) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, LED_CLOSE);
+                else if (pushCmd_ -> led == 1 )HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, LED_OPEN);
             }
             // * 回传推杆当前长度
             pushVal_->cur_length_b = 1.0f;
@@ -189,6 +197,14 @@ namespace TskPushBoard
         HAL_NVIC_SetPriority(TIM3_IRQn, 0, 0); // 设置定时器3中断优先级
         HAL_NVIC_EnableIRQ(TIM3_IRQn); // 使能定时器3中断
         #endif
+
+        // * 250926 把 PB0 配置成普通IO输出模式, 用于控制继电器
+        GPIO_InitStruct.Pin = GPIO_PIN_0; // 只配置PB0
+        GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP; // 普通推挽输出
+        GPIO_InitStruct.Pull = GPIO_NOPULL; // 无上下拉
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // 高速
+        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct); // 初始化PB0
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET); // 默认输出低电平
     }
 }
 

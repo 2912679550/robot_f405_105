@@ -126,6 +126,7 @@ extern "C"
         float tar_length_f; // 前侧推杆的期望长度
         float tar_length_b; // 后侧推杆的期望长度
         float tar_length_m; // 中间推杆的期望长度
+        uint32_t led; // 0:off 1:open
     } PUSH_CMD;
 
     typedef struct{
